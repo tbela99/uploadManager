@@ -10,11 +10,11 @@ mootools ajax file upload with:
 How to use
 ---------------------
 
-see the Demo folder. you will needc a webserver with php installed to test the demo.
+see the Demo folder. you will need a webserver with php installed to test the demo.
 
 # uploadManager
 
-	object providing methods to control field upload.
+object providing methods to control field upload.
 
 ### uploadManager Property: filedrop
 
@@ -51,7 +51,7 @@ see file upload instance options.
 
 ##### Events:
 
-###### onCreate
+##### onCreate
 
 Fired after the uplaod instance has been created.
 
@@ -59,7 +59,7 @@ Fired after the uplaod instance has been created.
 
 - id - (*object*) upload transfer instance id.
 
-###### onLoad
+##### onLoad
 
 Fired before the file is uploaded.
 
@@ -73,7 +73,7 @@ Fired before the file is uploaded.
 - file - (*string*) the file name.
 - size - (*int*) file size. if the browser supports XMLHTTPRequest file upload, this wil be the actual file size, otherwise it will be 0.
 
-###### onAbort
+##### onAbort
 
 Fired when the transfer is aborted (it has not started).
 
@@ -88,7 +88,7 @@ Fired when the transfer is aborted (it has not started).
 - file - (*string*) the file name.
 - size - (*int*) file size. if the browser supports XMLHTTPRequest file upload, this wil be the actual file size, otherwise it will be 0.
 
-###### onCancel
+##### onCancel
 
 Fired when the transfer is cancelled.
 
@@ -97,7 +97,7 @@ Fired when the transfer is cancelled.
 - transfer - (*object*) file upload instance.
 
 
-###### onFailure
+##### onFailure
 
 Fired when the transfer fails.
 
@@ -105,7 +105,7 @@ Fired when the transfer fails.
 
 - transfer - (*object*) file upload instance.
 
-###### onSuccess
+##### onSuccess
 
 Fired when the transfer succeed.
 
@@ -119,7 +119,7 @@ Fired when the transfer succeed.
 - path - (*string*) the encrypted file path on the server.
 - size - (*int*) uploaded file size.
 
-###### onComplete
+##### onComplete
 
 Fired when the transfer is complete.
 
@@ -203,7 +203,7 @@ return uploaded file size for a given container.
 
 # File upload instance {#uploadManager:instance}
 
-	object wrapping a file upload instance.
+object wrapping a file upload instance.
 
 ### Implements
 
