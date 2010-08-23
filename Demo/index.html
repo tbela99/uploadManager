@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>File Upload</title>
+<style type="text/css">
+#upload {
+
+	border: 1px solid #ccc;
+	max-width: 300px;
+	min-height: 100px;
+}
+</style>
+<script type="text/javascript" src="../mootools-core.js"></script>
+<script type="text/javascript" src="../number.js"></script>
+<script type="text/javascript" src="../Source/upload.js"></script>
+<script type="text/javascript">
+
+window.addEvent('domready', function() {
+
+	var options = {
+		
+			container: 'upload',
+			base: '../php/upload.php',
+			//filetype: 'html,rar,zip',
+			name: 'alias',
+			onAbort: function (file, message) {
+			
+				alert(message)
+			}
+		};
+	
+	//enable file drag-drop
+	if(uploadManager.filedrop) uploadManager.attachEvents($('upload').set('title', 'Drag and drop files here'), options);
+	
+	document.getElement('a').addEvent('click', function(e) {
+	
+		e.stop();
+		
+		uploadManager.upload(options)
+	})
+})
+</script>
+</head>
+
+<body><form action="" method="get"><a href="#">Upload a file</a></form>
+<div id="upload"></div>
+</body>
+</html>
