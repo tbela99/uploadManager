@@ -1,18 +1,19 @@
-
 /*
-Script: Upload.js
-	Javascript crossbrowser file upload, with some html5 sugar.
-	
-	License: MIT-style license.
-	Copyright: Copyright (c) 2008 Thierry Bela
-	License:
-		MIT-style license.
+---
+script: upload.js
+license: MIT-style license.
+description: Javascript crossbrowser file upload, with some html5 sugar.
+copyright: Copyright (c) 2006 - 2010 Thierry Bela
+authors: [Thierry Bela]
 
-	Authors:
-		Thierry Bela
-	Version:
-		2.0
-	Copyright: Thierry Bela 2006 - 2010
+requires: 
+  core:1.2.3: 
+  - Element.Event
+  - Element.Style
+  - Fx.Tween
+  - Array
+provides: [uploadManager]
+...
 */
 
 /* 
