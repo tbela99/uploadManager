@@ -17,6 +17,7 @@ Script: Upload.js
 
 /* 
 	{
+		onCreate: function(id) {}, //before the file is loaded
 		onLoad: function(object) {}, //before the file is loaded
 		onAbort: function(file, accepted) {}, //file failed validation
 		onCancel: function(transfer) {}, //upload cancelled
@@ -69,7 +70,7 @@ Script: Upload.js
 			filedrop: dragevents,
 			
 			//maximum parallel transfer, 0: no limit
-			max: 2,
+			//max: 2,
 			//registered transferts
 			transferts: [],
 			
@@ -107,7 +108,7 @@ Script: Upload.js
 
 			upload: function(options) {
 			
-				var opt = $merge({limit: 0, maxSize: 0}, options),
+				var opt = $merge({limit: 0}, options),
 					container = opt.container,
 					transfer,
 					c = this.transferts[container];
@@ -478,7 +479,7 @@ Script: Upload.js
 				} else event = 'failure';
 				
 				json.element = this.element;				
-				this.fireEvent(event, json).fireEvent('complete', this)
+				this.fireEvent(event, event == 'failure' ? this : json).fireEvent('complete', this)
 			},
 
 			load: function (file) {
