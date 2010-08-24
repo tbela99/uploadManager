@@ -10,7 +10,7 @@ mootools ajax file upload with:
 How to use
 ---------------------
 
-see the Demo folder. you will need a webserver with php installed to test the demo.
+see the Demo folder. you will need a webserver with php installed to run the demo.
 
 # uploadManager
 
