@@ -3,9 +3,9 @@ uploadManager
 
 mootools ajax file upload with:
 
- - file drag drop support (currently supported by chrome5+ and firefox 3.6+)
- - no iframe and progress bar for browser that support HTML5 File API (chrome5+, safari4+, Firefox 3.6+)
- - iframe for the other
+- file drag drop support (currently supported by chrome5+ and firefox 3.6+)
+- no iframe and progress bar for browser that support HTML5 File API (chrome5+, safari4+, Firefox 3.6+)
+- iframe for the other
 
 How to use
 ---------------------
