@@ -72,7 +72,7 @@ Fired before the file is uploaded.
 
 - element - (*element*) the upload field instance container.
 - file - (*string*) the file name.
-- size - (*int*) file size. if the browser supports XMLHTTPRequest file upload, this wil be the actual file size, otherwise it will be 0.
+- size - (*int*) file size. if the browser supports XMLHTTPRequest file upload, this will be the actual file size, otherwise it will be 0.
 
 ##### onAbort
 
