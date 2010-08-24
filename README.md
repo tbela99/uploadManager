@@ -178,11 +178,11 @@ return the [file upload instance](#uploadManager:instance) options with a given 
 ### uploadManager Method: format
 ------------
 
-format file size.
+format file size for reading.
 
 ### Returns:
 
-* (*int*)
+* (*string*)
 
 #### Arguments:
 
