@@ -45,6 +45,7 @@ see file upload instance options.
 - container - (*string*) upload field container id.
 - base - (*string*, optional) url of the page that will handle server side file upload. default to *upload.php*.
 - limit - (*int*, optional) maximum number of file the user should upload. 0 means no limit. default to 0.
+- multiple - (*boolean*, optional) enable multiple file selection for the input if the browser can handle it.
 - filetype - (*string*, optional) authorized file type.
 - name - (*string*) name of the upload form field. it contains the name of the file sent by the user. if the upload succeed a hidden field named *'file_' + name* and containing the encrypted file path on the server will be pushed into the form
 
@@ -201,7 +202,7 @@ return uploaded file size for a given container.
 1. container - (*string*) container id
 
 
-# File upload instance {#uploadManager:instance}
+## File upload instance {#uploadManager:instance}
 
 object wrapping a file upload instance.
 

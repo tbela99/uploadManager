@@ -24,6 +24,7 @@ provides: [uploadManager]
 		onCancel: function(transfer) {}, //upload cancelled
 		onFailure: function (transfer) {}, //upload failed
 		onSuccess: function (object) {}, //upload succeded
+		onComplete: function (object) {}, //upload terminated
 	}
 */ 
 (function ($) {
@@ -437,7 +438,7 @@ provides: [uploadManager]
 				
 				this.element = new Element('div', {
 						'class': 'upload-container',
-						html: '<div style="display:inline-block;padding:3px"><span style="display:none">&nbsp;</span><span><input id="' + options.id + '_input" type="file" name="' + options.id + '_input" multiple="multiple" />'
+						html: '<div style="display:inline-block;padding:3px"><span style="display:none">&nbsp;</span><span><input id="' + options.id + '_input" type="file" name="' + options.id + '_input"' + (options.multiple ? ' multiple="multiple"' : '') + ' />'
 						+ '<input type="checkbox" style="display:none" name="' + options.name + '" id="' + options.id + '" />'
 						+ '<input type="checkbox" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile" />'
 						+ '<label for="'+ options.id + '"></label>'
