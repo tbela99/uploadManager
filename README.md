@@ -7,6 +7,9 @@ mootools ajax file upload with:
 - no iframe and progress bar for browser that support HTML5 File API (chrome5+, safari4+, Firefox 3.6+)
 - iframe for the other
 
+[Demo](http://tbela.fragged.org/demos/upload/Demo/)
+
+
 How to use
 ---------------------
 

@@ -501,7 +501,7 @@ provides: [uploadManager]
 				var first = this.element.getFirst();
 				this.width = first.offsetWidth - 6;
 				first.setStyle('width', first.offsetWidth);
-				this.progress = new Element('span', {tween: {link: 'cancel'}, html: '&nbsp;', style: 'display:inline-block;width:1px;background:#5F82D9'}).inject(this.element.getElement('span').
+				this.progress = new Element('span', {tween: {link: 'cancel'}, html: '&nbsp;', style: 'display:inline-block;width:1px;background:#28F'}).inject(this.element.getElement('span').
 															set({
 																	text:'',
 																	styles: {width: this.width, border: '1px solid #ccc', display: 'inline-block'}
