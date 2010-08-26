@@ -136,8 +136,11 @@ function display(element, display) {
 
 			$r = basename(uploadHelper::decrypt($r));
 
-			if(is_file(TEMP_PATH.DS.basename($r)) && !in_array(basename($r), array($self, 'index.php')) && basename($r) != 'index.html')
+			if(is_file(TEMP_PATH.DS.basename($r)) && !in_array(basename($r), array($self, 'index.php')) && basename($r) != 'index.html') {
+				
+				chmod(TEMP_PATH.DS.basename($r), 0777);
 				unlink(TEMP_PATH.DS.basename($r));
+			}
 	  }
 	  
   ?><script type="text/javascript">
