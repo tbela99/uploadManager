@@ -74,7 +74,7 @@ provides: [uploadManager]
 			//maximum parallel transfer, 0: no limit
 			//max: 2,
 			//registered transferts
-			transferts: [],
+			infos: {},
 			
 			//transfer queue, callback functions
 			queue: {},
@@ -113,11 +113,11 @@ provides: [uploadManager]
 				var opt = $merge({limit: 0}, options),
 					container = opt.container,
 					transfer,
-					c = this.transferts[container];
+					c = this.infos[container];
 				
-				if(!this.transferts[container]) { 
+				if(!this.infos[container]) { 
 					
-					c = this.transferts[container] = {}; 
+					c = this.infos[container] = {}; 
 					c.size = 0; 
 					c.counter = 0; 
 					
@@ -131,7 +131,7 @@ provides: [uploadManager]
 				if(c.limit > 0 && c.counter >= c.limit) return null;
 				
 				//where to send the uploaded file
-				opt.base = opt.base || window.uploadBase || 'upload.php';
+				opt.base = opt.base || 'upload.php';
 				opt.id =  opt.name.replace(/[^a-z0-9]/gi, '') + new Date().getTime();
 				
 				c.counter++;
@@ -163,25 +163,18 @@ provides: [uploadManager]
 						
 					}).addEvents({
 					
-						/* check file size */
-						onLoad: function (object) {
-						
-							c.counter++;
-						},
-						
 						onSuccess: function (infos) { 
 						
 							var filesize = infos.size; 
 								
 							transfer.filesize = filesize;
-							uploadManager.transferts[container].size += filesize							
+							uploadManager.infos[container].size += filesize							
 						},
 						
-						onCancel: function () {  uploadManager.transferts[container].size -= transfer.filesize },
-						onComplete: function () { 
+						onCancel: function () {  c.counter--; uploadManager.infos[container].size -= transfer.filesize },
+						onFailure: function () { 
 						
-							c.counter--;
-							uploadManager.load(container)
+							c.counter--
 						}
                                                 
 					}).fireEvent('create', opt.id)
@@ -207,10 +200,10 @@ provides: [uploadManager]
 			
 				return $(id).retrieve(transport)
 			},
-			
+						
 			getSize: function(container, convert) { 
 				
-				return !convert ? this.transferts[container].size : this.format(this.transferts[container].size)
+				return !convert ? this.infos[container].size : this.format(this.infos[container].size)
 			},
 			
 			format: function (size) {
@@ -239,7 +232,6 @@ provides: [uploadManager]
 											height: 24,
 											backgroundColor: '#E1F1FD',
 											textAlign: 'center',
-											verticalAlign: 'center',
 											display: 'block',
 											zIndex: 10
 										}).tween('backgroundColor', '#1096E6')										
@@ -266,18 +258,7 @@ provides: [uploadManager]
 				
 				el.getFirst().style.display = 'none';
 				
-				if(e.event.dataTransfer) {
-					
-					var files = $A(e.event.dataTransfer.files);
-					
-					if(files.length > 0) {
-					
-						files.each(function (f) {
-						
-							uploadManager.upload(options).load(f)
-						})
-					}
-				}
+				if(e.event.dataTransfer) $A(e.event.dataTransfer.files).each(function (f) { uploadManager.upload(options).load(f) })
 			}
 		},
 		
@@ -314,6 +295,8 @@ provides: [uploadManager]
 					
 				return this.element
 			},
+			
+			toElement: function () { return this.element },
 			
 			load: function (file) {
 			
@@ -372,18 +355,7 @@ provides: [uploadManager]
 								}.bind(this)
 								
 				}).parent(options);
-								
-				this.element.getElement('input[type=file]').addEvent('change', function (e) {
-				
-					$A(e.target.files).each(function (f) {
-						
-						uploadManager.upload(options).load(f)
-					});
-						
-					this.cancel()
 					
-				}.bind(this));
-								
 				var xhr = this.xhr = new XMLHttpRequest();
 				
 				this.binary = !!xhr.sendAsBinary;
@@ -444,7 +416,19 @@ provides: [uploadManager]
 						+ '<label for="'+ options.id + '"></label>'
 						+ '</span></div><span id="' + options.id + '_label"><a href="' + options.base + '">Remove</a>'
 					}).inject(options.container);
+								
+				this.element.getElement('input[type=file]').addEvent('change', function (e) {
+				
+					var files = $A(e.target.files);
 					
+					this.load(files.shift());
+					files.each(function (f) {
+						
+						uploadManager.upload(options).load(f)
+					})
+					
+				}.bind(this));
+								
 				return this.element
 			},
 			
@@ -481,7 +465,7 @@ provides: [uploadManager]
 				} else event = 'failure';
 				
 				json.element = this.element;				
-				this.fireEvent(event, event == 'failure' ? this : json).fireEvent('complete', this)
+				this.fireEvent(event, event == 'failure' ? this : [json, this]).fireEvent('complete', this)
 			},
 
 			load: function (file) {
@@ -502,11 +486,7 @@ provides: [uploadManager]
 				this.width = first.offsetWidth - 6;
 				first.setStyle('width', first.offsetWidth);
 				this.progress = new Element('span', {tween: {link: 'cancel'}, html: '&nbsp;', style: 'display:inline-block;width:1px;background:#28F'}).inject(this.element.getElement('span').
-															set({
-																	text:'',
-																	styles: {width: this.width, border: '1px solid #ccc', display: 'inline-block'}
-																})
-															);
+															set({text:'', styles: {width: this.width, border: '1px solid #ccc', display: 'inline-block'}}));
 															
 				this.fields = this.progress.getParent().getNext().setStyle('display', 'none');
 				this.fields.getFirst().style.display = 'none';				

@@ -25,10 +25,15 @@
 
 	ob_start();
 
-	$headers = apache_request_headers();
+	if(uploadhelper::getVar('dl') == 1) require BASE_PATH.DS.'download.php';
 	
-	require !empty($headers['Sender']) ? BASE_PATH.DS.'upload.html5.php' :  BASE_PATH.DS.'upload.html.php';
-	
+	else {
+		
+		$headers = apache_request_headers();
+		
+		require !empty($headers['Sender']) ? BASE_PATH.DS.'upload.html5.php' :  BASE_PATH.DS.'upload.html.php';		
+	}
+
 	ob_flush();
 	
 //garbage colletor, remove old files

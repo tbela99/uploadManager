@@ -27,6 +27,10 @@ window.addEvent('domready', function() {
 			onAbort: function (file, message) {
 			
 				alert(message)
+			},
+			onSuccess: function (infos, transfer) {
+			
+				new Element('span', {html: '<a href="../php/upload.php?' + infos.path + '&dl=1&filename=' + infos.file + '">download</a> -&nbsp;'}).inject($(transfer).getElement('a'), 'before')
 			}
 		};
 	

@@ -115,7 +115,8 @@ Fired when the transfer succeed.
 
 ##### Arguments:
 
-- infos - (*object*) uploaded file infos
+1. infos - (*object*) uploaded file infos
+2. transfer - (*object*) file upload instance which fired the event
 
 ##### Infos:
 

@@ -100,6 +100,7 @@ function display(element, display) {
 		path = '<?php echo addslashes(uploadHelper::encrypt($file[0]['path'])); ?>',
 		id = <?php echo $f; ?>,
 		uploadManager = parent.window.uploadManager,
+		transfer = uploadManager.get(id),
 		arg = {file: file, path: path, size: <?php echo $filesize; ?>};
 		
 	parentDocument.getElementById(id + '_lfile').value = file;
@@ -121,7 +122,7 @@ function display(element, display) {
 		echo uploadHelper::route($self.(strpos($self, '?') === false ? '?' : '&').$f_.'&r='.urlencode(addslashes(uploadHelper::encrypt($file[0]['path'])))); 
 	?>\'}); return false">Remove</a>';
  
-	uploadManager.get(id).fireEvent('success', arg).fireEvent('complete', arg)
+	transfer.fireEvent('success', [arg, transfer]).fireEvent('complete', transfer)
 	</script>
    <?php    
    
