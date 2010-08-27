@@ -415,10 +415,7 @@ provides: [uploadManager]
 					var files = $A(e.target.files);
 					
 					this.load(files.shift());
-					files.each(function (f) {
-						
-						uploadManager.upload(options).load(f)
-					})
+					files.each(function (f) { uploadManager.upload(options).load(f) })
 					
 				}.bind(this));
 								
