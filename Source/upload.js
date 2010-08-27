@@ -236,20 +236,13 @@ provides: [uploadManager]
 											zIndex: 10
 										}).tween('backgroundColor', '#1096E6')										
 			},	
-			dragexit: function(e) {
 			
-				e.stop()				
-			},	
-			mouseleave: function (e) {
+			dragexit: function(e) { e.stop() },	
 			
-				var el = this;
-				
-				el.getFirst().style.display = 'none'
-			},
-			dragover: function(e) {
+			mouseleave: function (e) { this.getFirst().style.display = 'none' },
 			
-				e.stop()
-			},
+			dragover: function(e) { e.stop() },
+			
 			drop: function (e) {
 			
 				e.stop();
@@ -459,8 +452,8 @@ provides: [uploadManager]
 					if(!json || json.size != this.size) {
 						
 						event = 'failure';
-						if(!json) json = {message: jLanguage.get('Error')};
-						else json.message = jLanguage.get('File too large')
+						if(!json) json = {message: 'Error'};
+						else json.message = 'File too large'
 						
 					} else json.transfer = this
 					
@@ -473,9 +466,10 @@ provides: [uploadManager]
 			load: function (file) {
 				
 				this.fireEvent('load', {element: this.element, file: file.name, size: file.size});
+				
 				if(this.aborted) {
 				
-					if(this.aborted) this.fireEvent('abort', [file, this.message]);
+					this.fireEvent('abort', [file, this.message]);
 					this.cancel();
 					return this
 				}
