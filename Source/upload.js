@@ -459,13 +459,15 @@ provides: [uploadManager]
 					if(!json || json.size != this.size) {
 						
 						event = 'failure';
-						if(!json) json = {message: jLanguage.get('Error')}
+						if(!json) json = {message: jLanguage.get('Error')};
 						else json.message = jLanguage.get('File too large')
+						
+					} else json.transfer = this
 					}
 				} else event = 'failure';
 				
 				json.element = this.element;				
-				this.fireEvent(event, event == 'failure' ? this : [json, this]).fireEvent('complete', this)
+				this.fireEvent(event, event == 'failure' ? this : json).fireEvent('complete', this)
 			},
 
 			load: function (file) {

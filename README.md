@@ -50,7 +50,8 @@ see file upload instance options.
 - limit - (*int*, optional) maximum number of file the user should upload. 0 means no limit. default to 0.
 - multiple - (*boolean*, optional) enable multiple file selection for the input if the browser can handle it.
 - filetype - (*string*, optional) authorized file type.
-- name - (*string*) name of the upload form field. it contains the name of the file sent by the user. if the upload succeed a hidden field named *'file_' + name* and containing the encrypted file path on the server will be pushed into the form
+- name - (*string*) name of the upload form field. it contains the original name of the file sent by the user. if the upload succeed a hidden field named *'file_' + name* and containing the encrypted file path on the server will be pushed into the form.
+for example if our form field is named *name[]*, then *name[]* will contains the original file name and *file_name[]* will contains the encrypted file path on the server.
 
 
 ##### Events:
@@ -116,13 +117,13 @@ Fired when the transfer succeed.
 ##### Arguments:
 
 1. infos - (*object*) uploaded file infos
-2. transfer - (*object*) file upload instance which fired the event
 
 ##### Infos:
 
 - file - (*string*) the original file name.
 - path - (*string*) the encrypted file path on the server.
 - size - (*int*) uploaded file size.
+- transfer - (*object*) file upload instance which fired the event
 
 ##### onComplete
 

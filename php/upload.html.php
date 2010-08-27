@@ -101,7 +101,7 @@ function display(element, display) {
 		id = <?php echo $f; ?>,
 		uploadManager = parent.window.uploadManager,
 		transfer = uploadManager.get(id),
-		arg = {file: file, path: path, size: <?php echo $filesize; ?>};
+		arg = {file: file, path: path, size: <?php echo $filesize; ?>, transfer: transfer};
 		
 	parentDocument.getElementById(id + '_lfile').value = file;
 	parentDocument.getElementById(id).value = path; 
@@ -122,7 +122,7 @@ function display(element, display) {
 		echo uploadHelper::route($self.(strpos($self, '?') === false ? '?' : '&').$f_.'&r='.urlencode(addslashes(uploadHelper::encrypt($file[0]['path'])))); 
 	?>\'}); return false">Remove</a>';
  
-	transfer.fireEvent('success', [arg, transfer]).fireEvent('complete', transfer)
+	transfer.fireEvent('success', arg).fireEvent('complete', transfer)
 	</script>
    <?php    
    

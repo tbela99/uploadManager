@@ -30,7 +30,7 @@ window.addEvent('domready', function() {
 			},
 			onSuccess: function (infos, transfer) {
 			
-				new Element('span', {html: '<a href="../php/upload.php?' + infos.path + '&dl=1&filename=' + infos.file + '">download</a> -&nbsp;'}).inject($(transfer).getElement('a'), 'before')
+				new Element('span', {html: '<a href="../php/upload.php?' + infos.path + '&dl=1&filename=' + infos.file + '">download</a> -&nbsp;'}).inject($(infos.transfer).getElement('a'), 'before')
 			}
 		};
 	
