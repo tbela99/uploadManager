@@ -463,7 +463,7 @@ provides: [uploadManager]
 						else json.message = jLanguage.get('File too large')
 						
 					} else json.transfer = this
-					}
+					
 				} else event = 'failure';
 				
 				json.element = this.element;				
