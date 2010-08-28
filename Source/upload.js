@@ -57,7 +57,7 @@ provides: [uploadManager]
 	}
 				
 	var store = 'umo',
-		transport = 'upload:transport',
+		transport = 'upl:tr',
 		window = this,
 		//html5 does not mean dragdrop support //-> safari4, 5
 		dragevents = isSupported('drop'),
@@ -86,9 +86,7 @@ provides: [uploadManager]
 			
 			attachEvents: function (el, options) {
 			
-				if(!dragevents) return this;
-				
-				new Element('div', {style: 'display:none', text: 'Drop files here' }).
+				if(dragevents) new Element('div', {style: 'display:none', text: 'Drop files here' }).
 								inject($(el).
 								addEvents(dragdrop).
 								store(store, options), 'top');								
@@ -102,9 +100,7 @@ provides: [uploadManager]
 			
 			detachEvents: function (el) {
 			
-				if(!dragevents) return this;
-				
-				$(el).removeEvents(dragdrop).getFirst().destroy();
+				if(dragevents) $(el).removeEvents(dragdrop).getFirst().destroy();
 				return this			
 			},	
 
@@ -281,8 +277,8 @@ provides: [uploadManager]
 				
 				this.element = new Element('div', {'class': 'upload-container',
 								html: '<iframe id="' + options.id + '_iframe" src="' + options.base + ( options.base.indexOf('?') == -1 ? '?' : '&') + options.id + '" frameborder="0" scrolling="no" style="border:0;overflow:hidden;padding:0;display:block;float:left;height:20px;width:228px; "></iframe>'
-								+ '<input type="checkbox" style="display:none" name="' + options.name + '" id="' + options.id + '" />'
-								+ '<input type="checkbox" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile" />'
+								+ '<input type="checkbox" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
+								+ '<input type="checkbox" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
 								+ '<span class="upload-span" id="' + options.id + '_label" align="right"><a href="' + options.base + '">Remove</a></span><div style="clear:both;height:0"></div>'
 							}).inject(options.container);
 					
@@ -337,15 +333,15 @@ provides: [uploadManager]
 					}.bind(this),
 					onCancel: function () {
 				
-									if(this.running) {
-									
-										this.xhr.abort();
-										this.xhr.onreadystatechange = function(){};
-										this.xhr = new XMLHttpRequest();
-										this.running = false
-									}
-									
-								}.bind(this)
+							if(this.running) {
+							
+								this.xhr.abort();
+								this.xhr.onreadystatechange = function(){};
+								this.xhr = new XMLHttpRequest();
+								this.running = false
+							}
+							
+						}.bind(this)
 								
 				}).parent(options);
 					
@@ -403,9 +399,9 @@ provides: [uploadManager]
 				
 				this.element = new Element('div', {
 						'class': 'upload-container',
-						html: '<div style="display:inline-block;padding:3px"><span style="display:none">&nbsp;</span><span><input id="' + options.id + '_input" type="file" name="' + options.id + '_input"' + (options.multiple ? ' multiple="multiple"' : '') + ' />'
-						+ '<input type="checkbox" style="display:none" name="' + options.name + '" id="' + options.id + '" />'
-						+ '<input type="checkbox" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile" />'
+						html: '<div style="display:inline-block;padding:3px"><span style="display:none">&nbsp;</span><span><input id="' + options.id + '_input" type="file" name="' + options.id + '_input"' + (options.multiple ? ' multiple="multiple"' : '') + '/>'
+						+ '<input type="checkbox" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
+						+ '<input type="checkbox" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
 						+ '<label for="'+ options.id + '"></label>'
 						+ '</span></div><span id="' + options.id + '_label"><a href="' + options.base + '">Remove</a>'
 					}).inject(options.container);
