@@ -137,10 +137,10 @@ provides: [uploadManager]
 				return transfer.addEvents({
 		
 						onAbort: function () { c.counter-- },
-						onSuccess: function () {
+						onSuccess: function (json) {
 							
 							var id = opt.id,
-								file = $(id + '_lfile').set({checked: true}),
+								file = $(id + '_lfile').set({checked: true, value: json.path}),
 								change = function () {
 								
 									file.checked = this.checked
@@ -148,7 +148,8 @@ provides: [uploadManager]
 							
 								
 							$(id).set({
-										checked: true,
+										checked: true, 
+										value: json.file,
 										events: {
 											
 											change: change,
