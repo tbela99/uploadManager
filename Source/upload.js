@@ -204,7 +204,7 @@ provides: [uploadManager]
 				
 				el.getFirst().style.display = 'none';
 				
-				if(e.event.dataTransfer) $A(e.event.dataTransfer.files).each(function (f) { uploadManager.upload(options).load(f) })
+				if(e.event.dataTransfer) $A(e.event.dataTransfer.files).each(function (f) { try { uploadManager.upload(options).load(f) } catch(e) {} })
 			}
 		},
 		
@@ -277,7 +277,7 @@ provides: [uploadManager]
 			load: function (file) {
 			
 				this.aborted = false;
-				this.fireEvent('load', {element: this.element, file: file, size: 0});
+				this.fireEvent('load', {element: this.element, file: file, size: 0, transfer: this});
 				if(this.aborted) this.fireEvent('abort', {file: file, message: this.message || '', transfer: this});
 				return this;
 			},
@@ -401,7 +401,7 @@ provides: [uploadManager]
 					this.load(files.shift());
 					files.each(function (f) {
 						
-						uploadManager.upload(options).load(f)
+						try { uploadManager.upload(options).load(f) } catch(e) {}
 					})
 					
 				}.bind(this));
@@ -424,7 +424,7 @@ provides: [uploadManager]
 				var status, json, event = 'success';
 				this.running = false;
 				
-				try { status = this.xhr.status } catch(e) {};
+				try { status = this.xhr.status } catch(e) {}
 				this.xhr.onreadystatechange = function(){};
 				
 				//success
@@ -473,6 +473,7 @@ provides: [uploadManager]
 				return this
 			},
 			
+			//this launch the transfer, to retry after a failure, just call it again
 			initUpload: function () {
 			
 				var xhr = this.xhr;

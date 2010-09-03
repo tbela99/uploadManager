@@ -58,11 +58,11 @@ for example if our form field is named *name[]*, then *name[]* will contains the
 
 ##### onCreate
 
-Fired after the uplaod instance has been created.
+Fired after the upload instance has been created.
 
 ##### Arguments:
 
-- id - (*object*) upload transfer instance id.
+- id - (*object*) upload transfer instance id. you can retrieve this instance with uploadManager.get(id)
 
 ##### onLoad
 
@@ -77,6 +77,7 @@ Fired before the file is uploaded.
 - element - (*element*) the upload field instance container.
 - file - (*string*) the file name.
 - size - (*int*) file size. if the browser supports XMLHTTPRequest file upload, this will be the actual file size, otherwise it will be 0.
+- transfer - (*object*) file upload instance.
 
 ##### onAbort
 
@@ -84,14 +85,13 @@ Fired when the transfer is aborted (it has not started).
 
 ##### Arguments:
 
-- file - (*string*) file name
-- message - (*string*) error message
+- options - (*object*)
 
 ##### Options:
 
-- element - (*element*) the upload field instance container.
-- file - (*string*) the file name.
-- size - (*int*) file size. if the browser supports XMLHTTPRequest file upload, this wil be the actual file size, otherwise it will be 0.
+- file - (*string*) file name
+- message - (*string*) error message
+- transfer - (*object*) file upload instance.
 
 ##### onCancel
 
@@ -123,7 +123,7 @@ Fired when the transfer succeed.
 - file - (*string*) the original file name.
 - path - (*string*) the encrypted file path on the server.
 - size - (*int*) uploaded file size.
-- transfer - (*object*) file upload instance which fired the event
+- transfer - (*object*) file upload instance
 
 ##### onComplete
 
@@ -132,13 +132,6 @@ Fired when the transfer is complete.
 ##### Arguments:
 
 - transfer - (*object*) upload file instance
-
-##### Options:
-
-- element - (*element*) the upload field instance container.
-- file - (*string*) the file name.
-- size - (*int*) file size. if the browser supports XMLHTTPRequest file upload, this wil be the actual file size, otherwise it will be 0.
-
 
 ### uploadManager Method: attachEvents
 ------------
@@ -152,7 +145,7 @@ attach file dragdrop events to an element if the browser supports it.
 #### Arguments:
 
 1. el - (*mixed*) element
-1. options - (*object*) see file .
+1. options - (*object*) see [uploadManager#upload](#uploadManager:upload) .
 
 ### uploadManager Method: detachEvents
 ------------
@@ -170,15 +163,15 @@ remove file dragdrop events on an element.
 ### uploadManager Method: get
 ------------
 
-return the [file upload instance](#uploadManager:instance) options with a given id.
+return the [file upload instance](#uploadManager:instance) with the given id.
 
 ### Returns:
 
-* (*object*) - .
+* (*object*) - file upload instance.
 
 #### Arguments:
 
-1. el - (*mixed*) element
+1. id - (*string*) file upload instance id.
 
 ### uploadManager Method: format
 ------------
@@ -187,11 +180,11 @@ format file size for reading.
 
 ### Returns:
 
-* (*string*)
+* (*midex*)
 
 #### Arguments:
 
-1. size - (*int*) element
+1. size - (*int*)
 
 ### uploadManager Method: getSize
 ------------
@@ -200,7 +193,21 @@ return uploaded file size for a given container.
 
 ### Returns:
 
-* (*int*)
+* (*mixed*)
+
+#### Arguments:
+
+1. container - (*string*) container id
+2. convert - (*boolean*) convert the result
+
+### uploadManager Method: getTransfers
+------------
+
+return all the upload file instance of a given container.
+
+### Returns:
+
+* (*array*)
 
 #### Arguments:
 
