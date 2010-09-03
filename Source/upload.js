@@ -203,7 +203,6 @@ provides: [uploadManager]
 				var el = this, options = el.retrieve(store);
 				
 				el.getFirst().style.display = 'none';
-				
 				if(e.event.dataTransfer) $A(e.event.dataTransfer.files).each(function (f) { try { uploadManager.upload(options).load(f) } catch(e) {} })
 			}
 		},
@@ -447,7 +446,7 @@ provides: [uploadManager]
 			load: function (file) {
 				
 				this.aborted = false;
-				this.fireEvent('load', {element: this.element, file: file.name, size: file.size});
+				this.fireEvent('load', {element: this.element, file: file.name, size: file.size, transfer: this});
 				
 				if(this.aborted) {
 				
