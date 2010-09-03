@@ -34,7 +34,7 @@ create a new upload field.
 
 ### Returns:
 
-* (*object*) - file upload instance.
+* (*object*) - file upload instance or null if the the maximum number of files that can be uploaded is reached.
 
 #### Arguments:
 

@@ -153,7 +153,7 @@ provides: [uploadManager]
 			},
 			
 			//return a copy of the internal list
-			getTransferts: function (container) {
+			getTransfers: function (container) {
 			
 				var transfers = this.uploads[container] || [];
 				return transfers.map(function (t) { return t })
@@ -328,7 +328,6 @@ provides: [uploadManager]
 								this.xhr = new XMLHttpRequest();
 								this.running = false
 							}
-							
 						}
 								
 				}).parent(options);
