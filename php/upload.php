@@ -23,6 +23,18 @@
 
 	require dirname(__FILE__).DS.'uploadhelper.php';
 
+	if (!function_exists('apache_request_headers'))  {
+
+		function apache_request_headers() {
+		
+		   foreach ($_SERVER as $name => $value) 
+			   if (substr($name, 0, 5) == 'HTTP_') 
+				   $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+				   
+		   return $headers;
+		}
+	}
+
 	ob_start();
 
 	if(uploadhelper::getVar('dl') == 1) require BASE_PATH.DS.'download.php';
@@ -46,16 +58,18 @@
    $max_age = 3600 * 24;
    
    if($handle = opendir(TEMP_PATH)) {
-    while (false !== ($file = readdir($handle))) {
-	 if($file == '.' || $file == '..'|| $file == 'index.php')
-	  continue;
-     
-	 if($t - filemtime(TEMP_PATH.DS.$file) > $max_age)
-	  unlink(TEMP_PATH.DS.$file);
-    }
-    closedir($handle);
+   
+		while (false !== ($file = readdir($handle))) {
+		
+			if($file == '.' || $file == '..'|| $file == 'index.php')
+				continue;
+
+			if($t - filemtime(TEMP_PATH.DS.$file) > $max_age)
+				unlink(TEMP_PATH.DS.$file);
+		}
+		
+		closedir($handle);
    }
    
    exit();
-?>
 ?>

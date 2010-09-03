@@ -48,11 +48,9 @@ provides: [uploadManager]
 	//file type filter
 	function filter(object) { 
 					
-		var options = this.options,	
-			container = this.container,
-			matches = options.filetype.split(/[^a-z0-9]/i); 
-		
-		if(matches.length > 0) this.aborted = this.aborted || !new RegExp('(\.' + matches.join(')$|(\.') + '$)', 'i').test(object.file);
+		var matches = this.options.filetype.split(/[^a-z0-9]/i); 
+			
+		if(!this.aborted && matches.length > 0) this.aborted = !new RegExp('(\.' + matches.join(')$|(\.') + '$)', 'i').test(object.file);
 		if(this.aborted) this.message = 'unauthorized file type'
 	}
 				
@@ -71,10 +69,8 @@ provides: [uploadManager]
 			/* file drag-drop supported*/
 			filedrop: dragevents,
 			
-			//maximum parallel transfer, 0: no limit
-			//max: 2,
-			//registered transferts
-			infos: {},
+			//upload hash
+			uploads: {},
 			
 			//transfer queue, callback functions
 			queue: {},
@@ -108,73 +104,22 @@ provides: [uploadManager]
 			
 				var opt = $merge({limit: 0}, options),
 					container = opt.container,
-					transfer,
-					c = this.infos[container];
+					transfer;
 				
-				if(!this.infos[container]) { 
-					
-					c = this.infos[container] = {}; 
-					c.size = 0; 
-					c.counter = 0; 
-					
-					/*
-					
-						upload max file number
-					*/
-					c.limit = new Number(opt.limit).toString() == 'NaN' ? 0 : opt.limit
-				}
+				if(!this.uploads[container]) this.uploads[container] = [];
 				
-				if(c.limit > 0 && c.counter >= c.limit) return null;
+				//restrict number of uploaded files
+				if(opt.limit > 0 && this.uploads[container].length >= opt.limit) return null;
 				
 				//where to send the uploaded file
 				opt.base = opt.base || 'upload.php';
 				opt.id =  opt.name.replace(/[^a-z0-9]/gi, '') + new Date().getTime();
 				
-				c.counter++;
-				
 				transfer = html5 ? new HTML5Transfert(opt) : new Transfert(opt);
-				
-				return transfer.addEvents({
-		
-						onAbort: function () { c.counter-- },
-						onSuccess: function (json) {
-							
-							var id = opt.id,
-								file = $(id + '_lfile').set({checked: true, value: json.path}),
-								change = function () {
-								
-									file.checked = this.checked
-								};
-							
-								
-							$(id).set({
-										checked: true, 
-										value: json.file,
-										events: {
-											
-											change: change,
-											click: change
-										}
-									}).style.display = ''
-						}
-						
-					}).addEvents({
-					
-						onSuccess: function (infos) { 
-						
-							var filesize = infos.size; 
-								
-							transfer.filesize = filesize;
-							uploadManager.infos[container].size += filesize							
-						},
-						
-						onCancel: function () {  c.counter--; uploadManager.infos[container].size -= transfer.filesize },
-						onFailure: function () { 
-						
-							c.counter--
-						}
-                                                
-					}).fireEvent('create', opt.id)
+			
+				this.uploads[container].push(transfer);
+			
+				return transfer.fireEvent('create', opt.id)
 			},
 			
 			enqueue: function(container, callback) {
@@ -200,7 +145,18 @@ provides: [uploadManager]
 						
 			getSize: function(container, convert) { 
 				
-				return !convert ? this.infos[container].size : this.format(this.infos[container].size)
+				var size  = 0;
+				
+				(this.uploads[container] || []).each(function (transfer) { size += transfer.filesize });
+				
+				return convert ? this.format(size) : size
+			},
+			
+			//return a copy of the internal list
+			getTransferts: function (container) {
+			
+				var transfers = this.uploads[container] || [];
+				return transfers.map(function (t) { return t })
 			},
 			
 			format: function (size) {
@@ -258,9 +214,39 @@ provides: [uploadManager]
 			initialize: function(options) {
 
 				//Events
-				if(options.filetype) this.addEvent('onLoad', filter.bind(this));
+				if(options.filetype) this.addEvent('load', filter.bind(this));
 					
-				this.setOptions(options);
+				this.addEvents({
+		
+						success: function (json) {
+							
+							this.filesize = json.size;
+							
+							var id = options.id,
+								file = $(id + '_lfile').set({checked: true, value: json.path}),
+								change = function () {
+								
+									file.checked = this.checked
+								};
+							
+								
+							$(id).set({
+										checked: true, 
+										value: json.file,
+										events: {
+											
+											change: change,
+											click: change
+										}
+									}).style.display = ''
+						},
+						
+						cancel: function () {  
+						
+							uploadManager.uploads[options.container].erase(this)
+						}
+						
+					}).setOptions(options);
 				
 				var element = this.createElement();
 					
@@ -280,7 +266,7 @@ provides: [uploadManager]
 								html: '<iframe id="' + options.id + '_iframe" src="' + options.base + ( options.base.indexOf('?') == -1 ? '?' : '&') + options.id + '" frameborder="0" scrolling="no" style="border:0;overflow:hidden;padding:0;display:block;float:left;height:20px;width:228px; "></iframe>'
 								+ '<input type="checkbox" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
 								+ '<input type="checkbox" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
-								+ '<span class="upload-span" id="' + options.id + '_label" align="right"><a href="' + options.base + '">Remove</a></span><div style="clear:both;height:0"></div>'
+								+ '<span class="upload-span" id="' + options.id + '_label"><a href="' + options.base + '">Remove</a></span>'
 							}).inject(options.container);
 					
 				return this.element
@@ -290,8 +276,9 @@ provides: [uploadManager]
 			
 			load: function (file) {
 			
+				this.aborted = false;
 				this.fireEvent('load', {element: this.element, file: file, size: 0});
-				if(this.aborted) this.fireEvent('abort', [file, this.message]);
+				if(this.aborted) this.fireEvent('abort', {file: file, message: this.message || '', transfer: this});
 				return this;
 			},
 			
@@ -317,12 +304,12 @@ provides: [uploadManager]
 					
 				this.addEvents({
 				
-					onSuccess: function (json) { 
+					success: function (json) { 
 					
 						var remove = json.remove;
 						delete json.remove;
 						
-						this.addEvent('onCancel', function () {
+						this.addEvent('cancel', function () {
 						
 							var xhr = new XMLHttpRequest();
 							
@@ -331,8 +318,8 @@ provides: [uploadManager]
 							xhr.send()
 						})
 						
-					}.bind(this),
-					onCancel: function () {
+					},
+					cancel: function () {
 				
 							if(this.running) {
 							
@@ -342,7 +329,7 @@ provides: [uploadManager]
 								this.running = false
 							}
 							
-						}.bind(this)
+						}
 								
 				}).parent(options);
 					
@@ -369,7 +356,7 @@ provides: [uploadManager]
 										this.progress.getParent().style.display = 'none';
 										this.fields.getElement('label').set('text', this.filename + '(' + uploadManager.format(this.size) + ')');
 										this.fields.style.display = '';
-									}.bind(this)).delay(100)
+									}.bind(this)).delay(50)
 								}.bind(this))
 							}).
 					add(xhr,
@@ -396,7 +383,7 @@ provides: [uploadManager]
 			
 			createElement: function () {
 			
-				var options = this.options;
+				var options = this.options, input;
 				
 				this.element = new Element('div', {
 						'class': 'upload-container',
@@ -404,19 +391,23 @@ provides: [uploadManager]
 						+ '<input type="checkbox" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
 						+ '<input type="checkbox" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
 						+ '<label for="'+ options.id + '"></label>'
-						+ '</span></div><span id="' + options.id + '_label"><a href="' + options.base + '">Remove</a>'
+						+ '</span></div><a href="' + options.base + '">Remove</a>'
 					}).inject(options.container);
 								
-				this.element.getElement('input[type=file]').addEvent('change', function (e) {
+								
+				input = this.element.getElement('input[type=file]').addEvent('change', function (e) {
 				
-					var files = $A(e.target.files);
+					var files = $A(e.target.files), options = this.options;
 					
 					this.load(files.shift());
-					files.each(function (f) { uploadManager.upload(options).load(f) })
+					files.each(function (f) {
+						
+						uploadManager.upload(options).load(f)
+					})
 					
 				}.bind(this));
 								
-				return this.element
+				return this.addEvent('abort', function () { input.value = '' }).element
 			},
 			
 			add: function (obj, event, fn) {
@@ -440,30 +431,28 @@ provides: [uploadManager]
 				//success
 				if (status >= 200 && status < 300) {
 				
-					try { json = JSON.decode(this.xhr.responseText) }
-					catch(e) { }
+					try { 
 					
-					if(!json || json.size != this.size) {
-						
-						event = 'failure';
-						if(!json) json = {message: 'Error'};
-						else json.message = 'File too large'
-						
-					} else json.transfer = this
+						json = JSON.decode(this.xhr.responseText);
+						json.transfer = this;
+						json.element = this.element;						
+						if(json.size != this.size) event = 'failure'
+					}					
+					catch(e) { event = 'failure' }
 					
 				} else event = 'failure';
-				
-				json.element = this.element;				
+											
 				this.fireEvent(event, event == 'failure' ? this : json).fireEvent('complete', this)
 			},
 
 			load: function (file) {
 				
+				this.aborted = false;
 				this.fireEvent('load', {element: this.element, file: file.name, size: file.size});
 				
 				if(this.aborted) {
 				
-					this.fireEvent('abort', [file, this.message]);
+					this.fireEvent('abort', {file: file, message: this.message || '', transfer: this});
 					this.cancel();
 					return this
 				}

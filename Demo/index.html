@@ -24,12 +24,20 @@ window.addEvent('domready', function() {
 			base: '../php/upload.php',
 			//filetype: 'html,rar,zip',
 			name: 'alias',
-			onAbort: function (file, message) {
+			onAbort: function (object) {
 			
-				alert(message)
+				alert(object.message)
 			},
-			onSuccess: function (infos, transfer) {
+			onCancel: function () {
 			
+				//upload size
+				$('infos').set('html', uploadManager.getSize('upload', true));
+			},
+			onSuccess: function (infos) {
+							
+				//upload size
+				$('infos').set('html', uploadManager.getSize('upload', true));
+				//download link
 				new Element('span', {html: '<a href="../php/upload.php?' + infos.path + '&dl=1&filename=' + infos.file + '">download</a> -&nbsp;'}).inject($(infos.transfer).getElement('a'), 'before')
 			}
 		};
@@ -47,7 +55,7 @@ window.addEvent('domready', function() {
 </script>
 </head>
 
-<body><form action="" method="get"><a href="#">Upload a file</a></form>
+<body><form action="" method="get"><a href="#">Upload a file</a> [upload size: <span id="infos">0</span></form>
 <div id="upload"></div>
 </body>
 </html>
