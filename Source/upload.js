@@ -65,10 +65,10 @@ String.implement({shorten: function (max, end) {
 			
 			attachDragEvents: function (el, options) {
 			
-				new Element('div', {style: 'display:none', text: 'Drop files here' }).
+				if(!el.retrieve(store)) new Element('div', {style: 'display:none', text: 'Drop files here' }).
 								inject($(el).
 								addEvents(dragdrop).
-								store(store, options), 'top');								
+								store(store, options), 'top');					
 				return this
 			},
 
@@ -79,7 +79,8 @@ String.implement({shorten: function (max, end) {
 			
 			detachDragEvents: function (el) {
 			
-				$(el).removeEvents(dragdrop).getFirst().destroy();
+				el = $(el);
+				if(el.retrieve(store)) $(el).removeEvents(dragdrop).eliminate(store).getFirst().destroy();
 				return this			
 			},	
 
@@ -89,9 +90,9 @@ String.implement({shorten: function (max, end) {
 				return this
 			},
 			
-			fireEvent: function (container, event, fn, delay) {
+			fireEvent: function (container, event, args, delay) {
 			
-				this.events[container].fireEvent(event, fn, delay);				
+				this.events[container].fireEvent(event, args, delay);				
 				return this
 			},
 			
@@ -209,7 +210,7 @@ String.implement({shorten: function (max, end) {
 				var el = this, options = el.retrieve(store);
 				
 				el.getFirst().style.display = 'none';
-				if(e.event.dataTransfer) $A(e.event.dataTransfer.files).each(function (f) { try { uploadManager.upload(options).load(f) } catch(e) {} })
+				if(e.event.dataTransfer) $A(e.event.dataTransfer.files).each(function (f) { uploadManager.upload(options).load(f) })
 			}
 		},
 		
@@ -376,8 +377,8 @@ String.implement({shorten: function (max, end) {
 								
 									(function () {
 									
-										this.span.style.display = 'none';
-										this.fields.getElement('label').set('text', this.filename + '(' + uploadManager.format(this.size) + ')');
+										this.span.setStyle('display', 'none').getParent().style.width = 'auto';
+										this.fields.getElement('label').set({text: (this.filename + '(' + uploadManager.format(this.size) + ')').shorten(), title: this.filename});
 										this.fields.style.display = '';
 									}.bind(this)).delay(50)
 								}.bind(this))
@@ -423,10 +424,7 @@ String.implement({shorten: function (max, end) {
 					var files = $A(e.target.files), options = this.options;
 					
 					this.load(files.shift());
-					files.each(function (f) {
-						
-						try { uploadManager.upload(options).load(f) } catch(e) {}
-					})
+					files.each(function (f) { uploadManager.upload(options).load(f) })
 					
 				}.bind(this));
 								
@@ -489,13 +487,13 @@ String.implement({shorten: function (max, end) {
 					width = this.width = first.offsetWidth - 6,
 					name = file.name.shorten(),
 					style = 'position:absolute;display:inline-block;margin:0 auto;left:0;top:0',
-					span = this.span = this.element.getElement('span').
-						set({style: 'width:' + width + 'px;position:relative;border:1px solid #ccc;display:inline-block;text-align:center;', title: file.name}).
+					span = this.span = first.getElement('span').
+						set({style: 'width:' + width + 'px;position:relative;border:1px solid #aaa;display:inline-block;text-align:center;', title: file.name}).
 						adopt(new Element('span', {style: 'z-index:1;width:' + width + 'px;margin:0 auto;color:#aaa;' + style, text: name})).
 						adopt(new Element('span', {style: 'z-index:2;overflow:hidden;width:1px;' + style}).
 									adopt(new Element('span', {style: 'width:' + width + 'px;margin:0 auto;color:#fff;display:inline-block', text: name}))
 							).
-						adopt(new Element('span', {html: '&nbsp;', style: 'overflow:hidden;width:1px;background:#28F;' + style})),
+						adopt(new Element('span', {html: '&nbsp;', style: 'overflow:hidden;width:1px;background:#aaa;' + style})),
 					children = span.getChildren();
 							
 				first.setStyle('width', first.offsetWidth);

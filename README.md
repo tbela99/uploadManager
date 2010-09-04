@@ -19,10 +19,6 @@ see the Demo folder. you will need a webserver with php installed to run the dem
 
 object providing methods to control field upload.
 
-### uploadManager Property: filedrop
-
-(*boolean*) indicates if the browser handle file dragdrop.
-
 ### uploadManager Property: xmlhttpupload
 
 (*boolean*) indicates if the browser handle XMLHTTPRequest file upload.
@@ -141,10 +137,10 @@ Fired when all transfer are completed.
 
 - container - (*string*) container id
 
-### uploadManager Method: attachEvents
+### uploadManager Method: attachDragEvents
 ------------
 
-attach file dragdrop events to an element if the browser supports it.
+enable files to be uploaded when they are dropped on an element. this happen if the browser supports file drag drop.
 
 ### Returns:
 
@@ -155,10 +151,10 @@ attach file dragdrop events to an element if the browser supports it.
 1. el - (*mixed*) element
 1. options - (*object*) see [uploadManager#upload](#uploadManager:upload) .
 
-### uploadManager Method: detachEvents
+### uploadManager Method: detachDragEvents
 ------------
 
-remove file dragdrop events on an element.
+remove upload events from an element.
 
 ### Returns:
 

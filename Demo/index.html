@@ -24,6 +24,7 @@ window.addEvent('domready', function() {
 			base: '../php/upload.php',
 			//filetype: 'html,rar,zip',
 			name: 'alias',
+			multiple: true,
 			onAbort: function (object) {
 			
 				alert(object.message)
@@ -46,8 +47,7 @@ window.addEvent('domready', function() {
 			}
 		};
 	
-	//enable file drag-drop
-	if(uploadManager.filedrop) uploadManager.attachEvents($('upload').set('title', 'Drag and drop files here'), options);
+	uploadManager.attachDragEvents('upload', options);
 	
 	document.getElement('a').addEvent('click', function(e) {
 	
