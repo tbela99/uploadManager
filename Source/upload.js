@@ -28,22 +28,6 @@ String.implement({shorten: function (max, end) {
 	
 (function ($) {
 
-	function isSupported(event) {
-	
-		var div = new Element('div'),
-			eventName = 'on' + event,
-			isSupported = (eventName in div);
-            
-            if (!isSupported && div.setAttribute) {
-                div.setAttribute(eventName, 'return;');
-                isSupported = typeof div[eventName] == 'function';
-            }
-			
-		div.destroy();
-		
-		return isSupported
-	}
-	
 	//file type filter
 	function filter(object) { 
 					
@@ -56,18 +40,13 @@ String.implement({shorten: function (max, end) {
 	var store = 'umo',
 		transport = 'upl:tr',
 		window = this,
-		//html5 does not mean dragdrop support //-> safari4, 5
-		dragevents = isSupported('drop'),
 		html5 = !!new Element('input', {type: 'file'}).files,
 		
 		uploadManager = this.uploadManager = {
 			
 			/* iframe or xmlhttp is used */
 			xmlhttpupload: html5,
-			
-			/* file drag-drop supported*/
-			filedrop: dragevents,
-			
+						
 			//upload hash
 			uploads: {},
 			
@@ -84,9 +63,9 @@ String.implement({shorten: function (max, end) {
 				attach file dragdrop events onto el
 			*/
 			
-			attachEvents: function (el, options) {
+			attachDragEvents: function (el, options) {
 			
-				if(dragevents) new Element('div', {style: 'display:none', text: 'Drop files here' }).
+				new Element('div', {style: 'display:none', text: 'Drop files here' }).
 								inject($(el).
 								addEvents(dragdrop).
 								store(store, options), 'top');								
@@ -98,9 +77,9 @@ String.implement({shorten: function (max, end) {
 				detach file dragdrop events from el
 			*/
 			
-			detachEvents: function (el) {
+			detachDragEvents: function (el) {
 			
-				if(dragevents) $(el).removeEvents(dragdrop).getFirst().destroy();
+				$(el).removeEvents(dragdrop).getFirst().destroy();
 				return this			
 			},	
 
@@ -555,6 +534,6 @@ String.implement({shorten: function (max, end) {
 			}
 		});
 		
-		if(dragevents) $extend(Element.NativeEvents, {dragenter: 2, dragexit: 2, dragover: 2, drop: 2})
+		$extend(Element.NativeEvents, {dragenter: 2, dragexit: 2, dragover: 2, drop: 2})
 	
 })(document.id);
