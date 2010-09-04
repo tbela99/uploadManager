@@ -133,6 +133,14 @@ Fired when the transfer is complete.
 
 - transfer - (*object*) upload file instance
 
+##### onAllComplete
+
+Fired when all transfer are completed.
+
+##### Arguments:
+
+- container - (*string*) container id
+
 ### uploadManager Method: attachEvents
 ------------
 
@@ -200,9 +208,6 @@ return uploaded file size for a given container.
 1. container - (*string*) container id
 2. convert - (*boolean*) convert the result
 
-### uploadManager Method: getTransfers
-------------
-
 return all the upload file instance of a given container.
 
 ### Returns:
@@ -215,11 +220,17 @@ return all the upload file instance of a given container.
 
 
 ## File upload instance {#uploadManager:instance}
+----------------------
 
 object wrapping a file upload instance.
 
 ### Implements
 
 Options, Events. see [uploadManager#upload](#uploadManager:upload) for implemented options and events.
+
+### uploadManager Properties:
+------------
+- completed - (*boolean*) true if the file has been succesfully uploaded
+- filesize - (*int*) the uploaded file size in byte.
 
 

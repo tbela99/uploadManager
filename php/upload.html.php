@@ -31,22 +31,19 @@ body { padding: 0; margin: 0 0 0 2px; margin: 0; background: transparent }
 form { vertical-align:top; margin: 0 0 0 2px ; padding: 0 }
 input { margin: 0; padding: 0; border: 1px }
 </style>
-<script type="text/javascript"><?php
-/**
- * @version 2.0 {beta}
- * @author thierry bela <bntfr at yahoo dot fr>
- */
+<script type="text/javascript">
 
-?> 
+var win = parent.window,
+	doc = win.document;
 
-parentDocument = window.parent.document;
-
-function display(element, display) {
-
-	if(element.style) element.style.display=display; 
-	else element.display=display;
-}
-
+	String.prototype.shorten =  function (max, end) {
+	
+			max = max || 20;
+			end = end || 12;
+			
+			if(this.length > max) return this.substring(0, max - end - 3) + '... ' + this.substring(this.length - end + 1);
+			return this
+		}
 
 </script>
 </head>
@@ -68,10 +65,9 @@ function display(element, display) {
    //upload failed, too large file ?
    ?><script type="text/javascript">
 	var id = <?php echo $f; ?>,
-		transfer = parent.window.uploadManager.get(id);
+		transfer = win.uploadManager.get(id);
 	
-	div = parentDocument.getElementById(id + '_label');
-    div.innerHTML = ' <span class="upload-error">upload failed (file too large ? Max size = <?php 
+	div = win.$(id + '_label').set('html', ' <span class="upload-error">upload failed (file too large ? Max size = <?php 
 	
 		echo ini_get('upload_max_filesize'); 
 	?>)</span>...<a href="<?php echo $self; ?>" onclick="var id = <?php 
@@ -82,7 +78,7 @@ function display(element, display) {
 	?> $(id + \'_label\').innerHTML = \'\';<?php
 	?><?php
 	
-	?>$(id + \'_iframe\').style.display=\'block\'}).cancel(); return false;">Annuler</a>';
+	?>$(id + \'_iframe\').style.display=\'block\'}).cancel(); return false;">Annuler</a>');
 	
 	transfer.fireEvent('failure', transfer).fireEvent('complete', transfer)
 	</script>
@@ -99,16 +95,16 @@ function display(element, display) {
 	var file = '<?php echo addslashes($file[0]['name']) ?>',
 		path = '<?php echo addslashes(uploadHelper::encrypt($file[0]['path'])); ?>',
 		id = <?php echo $f; ?>,
-		uploadManager = parent.window.uploadManager,
+		uploadManager = win.uploadManager,
 		transfer = uploadManager.get(id),
 		arg = {file: file, path: path, size: <?php echo $filesize; ?>, transfer: transfer};
 		
-	parentDocument.getElementById(id + '_lfile').value = file;
-	parentDocument.getElementById(id).value = path; 
-	parentDocument.getElementById(id + '_label').innerHTML = '<label for="<?php echo $f_; ?>" title="<?php echo htmlentities($file[0]['name'], null, 'utf-8'); ?>"><?php 
+	win.$(id + '_lfile').value = file;
+	win.$(id).value = path; 
+	win.$(id + '_label').set('html', '<label for="<?php echo $f_; ?>" title="<?php echo addslashes(htmlentities($file[0]['name'], null, 'utf-8')); ?>">' + '<?php 
 	
-		echo addslashes(uploadHelper::truncate($file[0]['name'], 32, '...'.uploadHelper::file_ext2($file[0]['name']), false)); 
-	?> (' + uploadManager.format(<?php 
+		echo addslashes(htmlentities($file[0]['name'], null, 'utf-8')); 
+	?>'.shorten() + ' (' + uploadManager.format(<?php 
 	
 		echo $filesize; 
 	?>) + ')</label><a href="<?php 
@@ -120,7 +116,7 @@ function display(element, display) {
 	?>, transfer = uploadManager.get(id), iframe = $(id + \'_iframe\'); iframe.set({events: {\'load\': function () { setTimeout(function () { transfer.cancel() }, 10) }}, src: \'<?php 
 	
 		echo uploadHelper::route($self.(strpos($self, '?') === false ? '?' : '&').$f_.'&r='.urlencode(addslashes(uploadHelper::encrypt($file[0]['path'])))); 
-	?>\'}); return false">Remove</a>';
+	?>\'}); return false">Remove</a>');
  
 	transfer.fireEvent('success', arg).fireEvent('complete', transfer)
 	</script>
@@ -147,7 +143,7 @@ function display(element, display) {
   
   function upload(file){
 
-	var uploadManager = parent.window.uploadManager,
+	var uploadManager = win.uploadManager,
 		id = <?php  
 		
 			echo $f; 
@@ -158,18 +154,16 @@ function display(element, display) {
 	
 		uploadManager.enqueue(container, function () {
 		
-			var transfer = parent.window.uploadManager.get(id).load(file);
+			var transfer = win.uploadManager.get(id).load(file);
 			
 			if(transfer.aborted) document.getElementById('file').value = '';
 			else {
 				
 				// hide old iframe
-				iframe = parentDocument.getElementById(id + '_iframe');
-				display(iframe, 'none');
+				iframe = win.$(id + '_iframe');
+				iframe.style.display = 'none';
 				
-				div = parentDocument.getElementById(id + '_label');
-				
-				div.innerHTML = ' uploading, please wait...<a href="<?php 
+				div = win.$(id + '_label').set('html', ' uploading, please wait...<a href="<?php 
 				
 					echo uploadHelper::route('index.php'); 
 				?>" onclick="var id = <?php 
@@ -189,7 +183,7 @@ function display(element, display) {
 					
 				?>}).cancel(); <?php
 					
-					?>return false">Cancel</a>';
+					?>return false">Cancel</a>');
 					
 				document.getElementById('iform').submit()
 			}

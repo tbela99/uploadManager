@@ -16,17 +16,16 @@ provides: [uploadManager]
 ...
 */
 
-/* 
-	{
-		onCreate: function(id) {}, //before the file is loaded
-		onLoad: function(object) {}, //before the file is loaded
-		onAbort: function(file, accepted) {}, //file failed validation
-		onCancel: function(transfer) {}, //upload cancelled
-		onFailure: function (transfer) {}, //upload failed
-		onSuccess: function (object) {}, //upload succeded
-		onComplete: function (object) {}, //upload terminated
+String.implement({shorten: function (max, end) {
+
+		max = max || 20;
+		end = end || 12;
+		
+		if(this.length > max) return this.substring(0, max - end - 3) + '... ' + this.substring(this.length - end + 1);
+		return this
 	}
-*/ 
+});
+	
 (function ($) {
 
 	function isSupported(event) {
@@ -72,6 +71,11 @@ provides: [uploadManager]
 			//upload hash
 			uploads: {},
 			
+			//active transfers
+			actives: {},
+			
+			events: {},
+			
 			//transfer queue, callback functions
 			queue: {},
 			
@@ -100,16 +104,39 @@ provides: [uploadManager]
 				return this			
 			},	
 
+			addEvent: function (container, event, fn) {
+			
+				this.events[container].addEvent(event, fn);				
+				return this
+			},
+			
+			fireEvent: function (container, event, fn, delay) {
+			
+				this.events[container].fireEvent(event, fn, delay);				
+				return this
+			},
+			
 			upload: function(options) {
 			
 				var opt = $merge({limit: 0}, options),
 					container = opt.container,
 					transfer;
 				
-				if(!this.uploads[container]) this.uploads[container] = [];
+				if(!this.uploads[container]) {
+				
+					this.events[container] = new Events();
+					this.actives[container] = [];
+					this.uploads[container] = []
+				}
 				
 				//restrict number of uploaded files
 				if(opt.limit > 0 && this.uploads[container].length >= opt.limit) return null;
+				
+				if(opt.onAllComplete) {
+				
+					this.addEvent(opt.container, 'onAllComplete', opt.onAllComplete);
+					delete opt.onAllComplete
+				}
 				
 				//where to send the uploaded file
 				opt.base = opt.base || 'upload.php';
@@ -210,23 +237,26 @@ provides: [uploadManager]
 		Transfert = new Class({
 		
 			filesize: 0,
+			complete: false,
 			initialize: function(options) {
 
 				//Events
 				if(options.filetype) this.addEvent('load', filter.bind(this));
+					
+				var element,
+					container = options.container;
 					
 				this.addEvents({
 		
 						success: function (json) {
 							
 							this.filesize = json.size;
+							this.complete = true;
+							uploadManager.actives[container].erase(this)
 							
 							var id = options.id,
 								file = $(id + '_lfile').set({checked: true, value: json.path}),
-								change = function () {
-								
-									file.checked = this.checked
-								};
+								change = function () { file.checked = this.checked };
 							
 								
 							$(id).set({
@@ -240,15 +270,25 @@ provides: [uploadManager]
 									}).style.display = ''
 						},
 						
+						load: function () {
+													
+							uploadManager.actives[container].push(this)
+						},
+						
 						cancel: function () {  
 						
-							uploadManager.uploads[options.container].erase(this)
+							uploadManager.uploads[container].erase(this)
+							uploadManager.actives[container].erase(this)
+						},
+						
+						complete: function () {  
+						
+							if(uploadManager.actives[container].length == 0) uploadManager.fireEvent(container, 'allComplete', container)
 						}
 						
 					}).setOptions(options);
 				
-				var element = this.createElement();
-					
+				element = this.createElement();
 				element.getElement('#' + options.id).store(transport, this);					
 				element.getElement('a').addEvent("click", function(e) { 
 						
@@ -318,6 +358,7 @@ provides: [uploadManager]
 						})
 						
 					},
+					
 					cancel: function () {
 				
 							if(this.running) {
@@ -341,17 +382,22 @@ provides: [uploadManager]
 							'progress', 
 							function(e) {
 
-								if (e.lengthComputable) this.progress.tween('width', e.loaded * this.width / e.total)
+								if (e.lengthComputable) {
+									
+									var tween = {width: e.loaded * this.width / e.total};
+									this.progress.start({0:tween, 1:tween})
+								}
 							}).						
 					add(xhr,
 							'load', 
 							function() {
 
-								this.progress.tween('width', this.width).get('tween').chain(function () {
+								var tween = {width: this.width};
+								this.progress.start({0: tween, 1: tween}).chain(function () {
 								
 									(function () {
 									
-										this.progress.getParent().style.display = 'none';
+										this.span.style.display = 'none';
 										this.fields.getElement('label').set('text', this.filename + '(' + uploadManager.format(this.size) + ')');
 										this.fields.style.display = '';
 									}.bind(this)).delay(50)
@@ -361,7 +407,7 @@ provides: [uploadManager]
 							'error', 
 							function() {
 
-								this.progress.getParent().style.display = 'none';
+								this.span.style.display = 'none';
 								this.fields.getElement('label').set('text', this.filename + '(Failed)');
 							
 							}.bind(this));
@@ -459,13 +505,25 @@ provides: [uploadManager]
 				this.size = file.size;
 				this.filename = file.name;
 				
-				var first = this.element.getFirst();
-				this.width = first.offsetWidth - 6;
+				
+				var first = this.element.getFirst(),
+					width = this.width = first.offsetWidth - 6,
+					name = file.name.shorten(),
+					style = 'position:absolute;display:inline-block;margin:0 auto;left:0;top:0',
+					span = this.span = this.element.getElement('span').
+						set({style: 'width:' + width + 'px;position:relative;border:1px solid #ccc;display:inline-block;text-align:center;', title: file.name}).
+						adopt(new Element('span', {style: 'z-index:1;width:' + width + 'px;margin:0 auto;color:#aaa;' + style, text: name})).
+						adopt(new Element('span', {style: 'z-index:2;overflow:hidden;width:1px;' + style}).
+									adopt(new Element('span', {style: 'width:' + width + 'px;margin:0 auto;color:#fff;display:inline-block', text: name}))
+							).
+						adopt(new Element('span', {html: '&nbsp;', style: 'overflow:hidden;width:1px;background:#28F;' + style})),
+					children = span.getChildren();
+							
 				first.setStyle('width', first.offsetWidth);
-				this.progress = new Element('span', {tween: {link: 'cancel'}, html: '&nbsp;', style: 'display:inline-block;width:1px;background:#28F'}).inject(this.element.getElement('span').
-															set({text:'', styles: {width: this.width, border: '1px solid #ccc', display: 'inline-block'}}));
-															
-				this.fields = this.progress.getParent().getNext().setStyle('display', 'none');
+				
+				this.progress = new Fx.Elements([children.pop(), children.pop()], {link: 'cancel'});
+												
+				this.fields = span.getNext().setStyle('display', 'none');
 				this.fields.getFirst().style.display = 'none';				
 				uploadManager.enqueue(this.options.container, this.upload.bind(this));
 				if(this.reader) this.reader.readAsBinaryString(file);
@@ -497,11 +555,6 @@ provides: [uploadManager]
 			}
 		});
 		
-		if(dragevents) $extend(Element.NativeEvents, {
-			dragenter: 2,
-			dragexit: 2,
-			dragover: 2,
-			drop: 2
-		})
+		if(dragevents) $extend(Element.NativeEvents, {dragenter: 2, dragexit: 2, dragover: 2, drop: 2})
 	
 })(document.id);
