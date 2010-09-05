@@ -65,6 +65,7 @@ String.implement({shorten: function (max, end) {
 			
 			attachDragEvents: function (el, options) {
 			
+				el = $(el);
 				if(!el.retrieve(store)) new Element('div', {style: 'display:none', text: 'Drop files here' }).
 								inject($(el).
 								addEvents(dragdrop).
