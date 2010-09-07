@@ -7,10 +7,11 @@ copyright: Copyright (c) 2006 - 2010 Thierry Bela
 authors: [Thierry Bela]
 
 requires: 
-  core:1.2.3: 
+  core:1.2.4: 
   - Element.Event
   - Element.Style
   - Fx.Tween
+  - Fx.Elements
   - Array
 provides: [uploadManager]
 ...
@@ -28,15 +29,6 @@ String.implement({shorten: function (max, end) {
 	
 (function ($) {
 
-	//file type filter
-	function filter(object) { 
-					
-		var matches = this.options.filetype.split(/[^a-z0-9]/i); 
-			
-		if(!this.aborted && matches.length > 0) this.aborted = !new RegExp('(\.' + matches.join(')$|(\.') + '$)', 'i').test(object.file);
-		if(this.aborted) this.message = 'unauthorized file type'
-	}
-				
 	var store = 'umo',
 		transport = 'upl:tr',
 		window = this,
@@ -221,14 +213,25 @@ String.implement({shorten: function (max, end) {
 			complete: false,
 			initialize: function(options) {
 
-				//Events
-				if(options.filetype) this.addEvent('load', filter.bind(this));
+				//file type filter
+				if(options.filetype) this.addEvent('load',	function (object) { 
+					
+					var matches = options.filetype.split(/[^a-z0-9]/i); 
+						
+					if(!this.aborted && matches.length > 0) this.aborted = !new RegExp('(\.' + matches.join(')$|(\.') + '$)', 'i').test(object.file);
+					if(this.aborted) this.message = 'unauthorized file type'
+				});
 					
 				var element,
 					container = options.container;
 					
 				this.addEvents({
 		
+						load: function () {
+													
+							uploadManager.actives[container].push(this)
+						},
+						
 						success: function (json) {
 							
 							this.filesize = json.size;
@@ -251,11 +254,6 @@ String.implement({shorten: function (max, end) {
 									}).style.display = ''
 						},
 						
-						load: function () {
-													
-							uploadManager.actives[container].push(this)
-						},
-						
 						cancel: function () {  
 						
 							uploadManager.uploads[container].erase(this)
@@ -269,7 +267,7 @@ String.implement({shorten: function (max, end) {
 						
 					}).setOptions(options);
 				
-				element = this.createElement();
+				element = this.createElement(options);
 				element.getElement('#' + options.id).store(transport, this);					
 				element.getElement('a').addEvent("click", function(e) { 
 						
@@ -278,10 +276,8 @@ String.implement({shorten: function (max, end) {
 				}.bind(this))
 			},
 			
-			createElement: function () {
+			createElement: function (options) {
 			
-				var options = this.options;
-				
 				this.element = new Element('div', {'class': 'upload-container',
 								html: '<iframe id="' + options.id + '_iframe" src="' + options.base + ( options.base.indexOf('?') == -1 ? '?' : '&') + options.id + '" frameborder="0" scrolling="no" style="border:0;overflow:hidden;padding:0;display:block;float:left;height:20px;width:228px; "></iframe>'
 								+ '<input type="checkbox" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
@@ -359,9 +355,7 @@ String.implement({shorten: function (max, end) {
 					
 				xhr.onreadystatechange = this.onStateChange.bind(this);
 
-				this.add(xhr.upload, 
-							'progress', 
-							function(e) {
+				this.add(xhr.upload, 'progress', function(e) {
 
 								if (e.lengthComputable) {
 									
@@ -369,9 +363,7 @@ String.implement({shorten: function (max, end) {
 									this.progress.start({0:tween, 1:tween})
 								}
 							}).						
-					add(xhr,
-							'load', 
-							function() {
+					add(xhr, 'load', function() {
 
 								var tween = {width: this.width};
 								this.progress.start({0: tween, 1: tween}).chain(function () {
@@ -384,9 +376,7 @@ String.implement({shorten: function (max, end) {
 									}.bind(this)).delay(50)
 								}.bind(this))
 							}).
-					add(xhr,
-							'error', 
-							function() {
+					add(xhr, 'error',  function() {
 
 								this.span.style.display = 'none';
 								this.fields.getElement('label').set('text', this.filename + '(Failed)');
@@ -397,19 +387,15 @@ String.implement({shorten: function (max, end) {
 				
 					var reader = this.reader = new FileReader();
 						
-					this.add(reader,
-								'load', 
-								function(e) { 
+					this.add(reader, 'load', function(e) { 
 									this.bin = e.target.result; 
 									this.ready = true 
 								})
 				}
 			},
 			
-			createElement: function () {
+			createElement: function (options) {
 			
-				var options = this.options, input;
-				
 				this.element = new Element('div', {
 						'class': 'upload-container',
 						html: '<div style="display:inline-block;padding:3px"><span style="display:none">&nbsp;</span><span><input id="' + options.id + '_input" type="file" name="' + options.id + '_input"' + (options.multiple ? ' multiple="multiple"' : '') + '/>'
@@ -418,15 +404,13 @@ String.implement({shorten: function (max, end) {
 						+ '<label for="'+ options.id + '"></label>'
 						+ '</span></div><a href="' + options.base + '">Remove</a>'
 					}).inject(options.container);
-								
-								
-				input = this.element.getElement('input[type=file]').addEvent('change', function (e) {
+							
+				var input = this.element.getElement('input[type=file]').addEvent('change', function (e) {
 				
-					var files = $A(e.target.files), options = this.options;
+					var files = $A(e.target.files);
 					
 					this.load(files.shift());
 					files.each(function (f) { uploadManager.upload(options).load(f) })
-					
 				}.bind(this));
 								
 				return this.addEvent('abort', function () { input.value = '' }).element
@@ -494,7 +478,7 @@ String.implement({shorten: function (max, end) {
 						adopt(new Element('span', {style: 'z-index:2;overflow:hidden;width:1px;' + style}).
 									adopt(new Element('span', {style: 'width:' + width + 'px;margin:0 auto;color:#fff;display:inline-block', text: name}))
 							).
-						adopt(new Element('span', {html: '&nbsp;', style: 'overflow:hidden;width:1px;background:#aaa;' + style})),
+						adopt(new Element('span', {html: '&nbsp;', style: 'width:1px;background:#aaa;' + style})),
 					children = span.getChildren();
 							
 				first.setStyle('width', first.offsetWidth);
