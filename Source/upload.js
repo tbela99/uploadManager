@@ -45,8 +45,6 @@ String.implement({shorten: function (max, end) {
 			//active transfers
 			actives: {},
 			
-			events: {},
-			
 			//transfer queue, callback functions
 			queue: {},
 			
@@ -77,18 +75,6 @@ String.implement({shorten: function (max, end) {
 				return this			
 			},	
 
-			addEvent: function (container, event, fn) {
-			
-				this.events[container].addEvent(event, fn);				
-				return this
-			},
-			
-			fireEvent: function (container, event, args, delay) {
-			
-				this.events[container].fireEvent(event, args, delay);				
-				return this
-			},
-			
 			upload: function(options) {
 			
 				var opt = $merge({limit: 0}, options),
@@ -97,19 +83,12 @@ String.implement({shorten: function (max, end) {
 				
 				if(!this.uploads[container]) {
 				
-					this.events[container] = new Events();
 					this.actives[container] = [];
 					this.uploads[container] = []
 				}
 				
 				//restrict number of uploaded files
 				if(opt.limit > 0 && this.uploads[container].length >= opt.limit) return null;
-				
-				if(opt.onAllComplete) {
-				
-					this.addEvent(opt.container, 'onAllComplete', opt.onAllComplete);
-					delete opt.onAllComplete
-				}
 				
 				//where to send the uploaded file
 				opt.base = opt.base || 'upload.php';
@@ -138,10 +117,7 @@ String.implement({shorten: function (max, end) {
 			},
 			
 			//return Transfert associated to a given id
-			get: function (id) {
-			
-				return $(id).retrieve(transport)
-			},
+			get: function (id) { return $(id).retrieve(transport) },
 						
 			getSize: function(container, convert) { 
 				
@@ -262,7 +238,7 @@ String.implement({shorten: function (max, end) {
 						
 						complete: function () {  
 						
-							if(uploadManager.actives[container].length == 0) uploadManager.fireEvent(container, 'allComplete', container)
+							if(uploadManager.actives[container].length == 0) this.fireEvent('allComplete', container)
 						}
 						
 					}).setOptions(options);
@@ -333,7 +309,6 @@ String.implement({shorten: function (max, end) {
 							xhr.setRequestHeader('Sender', 'XMLHttpRequest');
 							xhr.send()
 						})
-						
 					},
 					
 					cancel: function () {
@@ -371,12 +346,12 @@ String.implement({shorten: function (max, end) {
 									(function () {
 									
 										this.span.setStyle('display', 'none').getParent().style.width = 'auto';
-										this.fields.getElement('label').set({text: (this.filename + '(' + uploadManager.format(this.size) + ')').shorten(), title: this.filename});
+										this.fields.getElement('label').set({text: (this.filename + ' (' + uploadManager.format(this.size) + ')').shorten(), title: this.filename});
 										this.fields.style.display = '';
 									}.bind(this)).delay(50)
 								}.bind(this))
 							}).
-					add(xhr, 'error',  function() {
+					add(xhr, 'error', function() {
 
 								this.span.style.display = 'none';
 								this.fields.getElement('label').set('text', this.filename + '(Failed)');
