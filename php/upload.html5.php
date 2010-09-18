@@ -16,11 +16,16 @@
 		
 		file_put_contents($filename, file_get_contents('php://input'));
 		
-		$size = filesize($filename);
-		$self = basename($_SERVER['PHP_SELF']);
+		$size = filesize($filename);		
+		$url = $_SERVER['REQUEST_URI'];
+		
+		if(($pos = strpos($url, '?')) !== false)
+			$url = substr($url, 0, $pos);		
+  		
+		$url .= '?';
 		
 		header('Content-Type: application/x-json');
-		echo json_encode(array('file' => basename($headers['Filename']), 'path' => $path, 'size' => $size, 'remove' => $self.'?r='.urlencode($path)));
+		echo json_encode(array('file' => basename($headers['Filename']), 'path' => $path, 'size' => $size, 'remove' => $url.'r='.urlencode($path)));
 	
 		if($size == 0)
 			unlink($filename);

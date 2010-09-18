@@ -216,18 +216,18 @@ String.implement({shorten: function (max, end) {
 							
 							var id = options.id,
 								file = $(id + '_lfile').set({checked: true, value: json.path}),
-								change = function () { file.checked = this.checked };
-							
-								
-							$(id).set({
-										checked: true, 
+								change = function () { file.checked = this.checked },
+								checkbox = $(id).set({
 										value: json.file,
 										events: {
 											
 											change: change,
 											click: change
 										}
-									}).style.display = ''
+									});
+									
+								checkbox.style.display = '';
+								checkbox.checked = true
 						},
 						
 						cancel: function () {  
@@ -249,7 +249,7 @@ String.implement({shorten: function (max, end) {
 						
 						e.stop(); 
 						this.cancel() 
-				}.bind(this))
+				}.pass(null, this))
 			},
 			
 			createElement: function (options) {
@@ -316,7 +316,6 @@ String.implement({shorten: function (max, end) {
 							if(this.running) {
 							
 								this.xhr.abort();
-								this.xhr.onreadystatechange = function(){};
 								this.xhr = new XMLHttpRequest();
 								this.running = false
 							}
@@ -328,8 +327,6 @@ String.implement({shorten: function (max, end) {
 				
 				this.binary = !!xhr.sendAsBinary;
 					
-				xhr.onreadystatechange = this.onStateChange.bind(this);
-
 				this.add(xhr.upload, 'progress', function(e) {
 
 								if (e.lengthComputable) {
@@ -348,15 +345,43 @@ String.implement({shorten: function (max, end) {
 										this.span.setStyle('display', 'none').getParent().style.width = 'auto';
 										this.fields.getElement('label').set({text: (this.filename + ' (' + uploadManager.format(this.size) + ')').shorten(), title: this.filename});
 										this.fields.style.display = '';
-									}.bind(this)).delay(50)
-								}.bind(this))
+									}.pass(null, this)).delay(50)
+								}.pass(null, this));
+																
+								if (xhr.readyState != 4) {
+								
+									this.fireEvent('failure', this).fireEvent('complete', this);
+									return
+								}
+								
+								var status, json, event = 'success';
+								this.running = false;
+								
+								try { status = xhr.status } catch(e) {}
+								//xhr.onreadystatechange = function(){};
+								
+								//success
+								if (status >= 200 && status < 300) {
+								
+									try { 
+									
+										json = JSON.decode(xhr.responseText);
+										json.transfer = this;
+										json.element = this.element;						
+										if(json.size != this.size) event = 'failure'
+									}					
+									catch(e) { event = 'failure' }
+									
+								} else event = 'failure';
+									
+								this.fireEvent(event, event == 'failure' ? this : json).fireEvent('complete', this)	
 							}).
 					add(xhr, 'error', function() {
 
 								this.span.style.display = 'none';
 								this.fields.getElement('label').set('text', this.filename + '(Failed)');
 							
-							}.bind(this));
+							}.pass(null, this));
 							
 				if(this.reader) {
 				
@@ -386,44 +411,17 @@ String.implement({shorten: function (max, end) {
 					
 					this.load(files.shift());
 					files.each(function (f) { uploadManager.upload(options).load(f) })
-				}.bind(this));
+				}.pass(null, this));
 								
 				return this.addEvent('abort', function () { input.value = '' }).element
 			},
 			
 			add: function (obj, event, fn) {
 			
-				fn = fn.bind(this);
+				fn = fn.pass(null, this);
 				if(obj.addEventListener) obj.addEventListener(event, fn, false);
 				else obj['on' + event] = fn;
 				return this
-			},
-			
-			onStateChange: function() {
-			
-				if (this.xhr.readyState != 4) return;
-				
-				var status, json, event = 'success';
-				this.running = false;
-				
-				try { status = this.xhr.status } catch(e) {}
-				this.xhr.onreadystatechange = function(){};
-				
-				//success
-				if (status >= 200 && status < 300) {
-				
-					try { 
-					
-						json = JSON.decode(this.xhr.responseText);
-						json.transfer = this;
-						json.element = this.element;						
-						if(json.size != this.size) event = 'failure'
-					}					
-					catch(e) { event = 'failure' }
-					
-				} else event = 'failure';
-											
-				this.fireEvent(event, event == 'failure' ? this : json).fireEvent('complete', this)
 			},
 
 			load: function (file) {
@@ -462,7 +460,7 @@ String.implement({shorten: function (max, end) {
 												
 				this.fields = span.getNext().setStyle('display', 'none');
 				this.fields.getFirst().style.display = 'none';				
-				uploadManager.enqueue(this.options.container, this.upload.bind(this));
+				uploadManager.enqueue(this.options.container, this.upload.pass(null, this));
 				if(this.reader) this.reader.readAsBinaryString(file);
 				return this
 			},
@@ -487,7 +485,7 @@ String.implement({shorten: function (max, end) {
 				if(this.reader) {
 				
 					if(this.ready) this.initUpload();
-					else setTimeout(this.upload.bind(this, 1000))
+					else setTimeout(this.upload.pass(null, this, 1000))
 				} else this.initUpload()
 			}
 		});
