@@ -485,7 +485,7 @@ String.implement({shorten: function (max, end) {
 				if(this.reader) {
 				
 					if(this.ready) this.initUpload();
-					else setTimeout(this.upload.pass(null, this, 1000))
+					else setTimeout(this.upload.pass(null, this), 100)
 				} else this.initUpload()
 			}
 		});
