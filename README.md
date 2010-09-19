@@ -3,9 +3,9 @@ uploadManager
 
 mootools ajax file upload with:
 
-- file drag drop support (currently supported by chrome5+ and firefox 3.6+)
-- no iframe and progress bar for browser that support HTML5 File API (chrome5+, safari4+, Firefox 3.6+)
-- iframe for the other
+- file drag drop on upload container (currently supported by chrome5+ and firefox 3.6+)
+- no iframe and progress bar for browsers that support HTML5 File API (chrome5+, safari4+, Firefox 3.6+)
+- iframe for the others
 
 [Demo](http://tbela.fragged.org/demos/upload/Demo/)
 
@@ -21,7 +21,7 @@ object providing methods to control field upload.
 
 ### uploadManager Property: xmlhttpupload
 
-(*boolean*) indicates if the browser handle XMLHTTPRequest file upload.
+(*boolean*) indicates if the browser handle file upload via XMLHTTPRequest.
 
 ### uploadManager Method: upload {#uploadManager:upload}
 ------------
@@ -38,10 +38,7 @@ create a new upload field.
 
 ##### Options:
 
-see file upload instance options.
-
-
-- container - (*string*) upload field container id.
+- container - (*string*) upload container id.
 - base - (*string*, optional) url of the page that will handle server side file upload. default to *upload.php*.
 - limit - (*int*, optional) maximum number of file the user should upload. 0 means no limit. default to 0.
 - multiple - (*boolean*, optional) enable multiple file selection for the input if the browser can handle it.
@@ -58,7 +55,7 @@ Fired after the upload instance has been created.
 
 ##### Arguments:
 
-- id - (*object*) upload transfer instance id. you can retrieve this instance with uploadManager.get(id)
+- id - (*object*) upload transfer instance id. you can retrieve this instance with uploadManager.get(id). it is also the id of the input checkbox 
 
 ##### onLoad
 

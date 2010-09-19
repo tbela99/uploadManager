@@ -23,7 +23,7 @@ window.addEvent('domready', function() {
 			container: 'upload',
 			base: '../php/upload.php',
 			//filetype: 'html,rar,zip',
-			name: 'alias',
+			name: 'files[]',
 			multiple: true,
 			onAbort: function (object) {
 			
@@ -59,7 +59,7 @@ window.addEvent('domready', function() {
 </script>
 </head>
 
-<body><form action="" method="get"><a href="#">Upload a file</a> [upload size: <span id="infos">0</span>]</form>
-<div id="upload"></div>
+<body><form action="" method="get"><a href="#">Upload a file</a> [upload size: <span id="infos">0</span>]
+<div id="upload"></div></form>
 </body>
 </html>

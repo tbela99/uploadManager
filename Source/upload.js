@@ -109,6 +109,11 @@ String.implement({shorten: function (max, end) {
 				return this.load(container)
 			},
 			
+			/*
+			
+				TODO: implement the maximum concurrent transfer limit
+			*/
+			
 			load: function (container) {
 			
 				var callback = this.queue[container].shift();
@@ -131,8 +136,7 @@ String.implement({shorten: function (max, end) {
 			//return a copy of the internal list
 			getTransfers: function (container) {
 			
-				var transfers = this.uploads[container] || [];
-				return transfers.map(function (t) { return t })
+				return (this.uploads[container] || []).map(function (t) { return t })
 			},
 			
 			format: function (size) {
