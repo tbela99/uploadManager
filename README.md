@@ -8,7 +8,7 @@ mootools ajax file upload with:
 - iframe for the others
 
 [Demo](http://tbela.fragged.org/demos/upload/Demo/)
-![Screenshot](http://github.com/tbela99/uploadmanager/raw/master/screenshot.png)
+![Screenshot](http://github.com/tbela99/uploadManager/raw/master/screenshot.png)
 
 
 How to use
@@ -182,7 +182,7 @@ format file size for reading.
 
 ### Returns:
 
-* (*midex*)
+* (*mixed*)
 
 #### Arguments:
 
