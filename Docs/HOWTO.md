@@ -8,7 +8,6 @@ mootools ajax file upload with:
 - iframe for the others
 
 [Demo](http://tbela.fragged.org/demos/upload/Demo/)
-![Screenshot](http://github.com/tbela99/progressbar/raw/master/screenshot.png)
 
 
 How does it work
