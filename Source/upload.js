@@ -298,6 +298,8 @@ String.implement({shorten: function (max, end) {
 			reader: !!window.FileReader,
 			initialize: function(options) {
 					
+				var xhr = this.xhr = new XMLHttpRequest();
+				
 				this.addEvents({
 				
 					success: function (json) { 
@@ -320,37 +322,26 @@ String.implement({shorten: function (max, end) {
 							if(this.running) {
 							
 								this.xhr.abort();
-								this.xhr = new XMLHttpRequest();
+								xhr = this.xhr = new XMLHttpRequest();
 								this.running = false
 							}
 						}
 								
 				}).parent(options);
 					
-				var xhr = this.xhr = new XMLHttpRequest();
-				
 				this.binary = !!xhr.sendAsBinary;
 					
 				this.add(xhr.upload, 'progress', function(e) {
 
-								if (e.lengthComputable) {
-									
-									var tween = {width: e.loaded * this.width / e.total};
-									this.progress.start({0:tween, 1:tween})
-								}
+								if (e.lengthComputable) this.progress.setValue(e.loaded / e.total)
 							}).						
 					add(xhr, 'load', function() {
 
-								var tween = {width: this.width};
-								this.progress.start({0: tween, 1: tween}).chain(function () {
-								
-									(function () {
-									
-										this.span.setStyle('display', 'none').getParent().style.width = 'auto';
-										this.fields.getElement('label').set({text: (this.filename + ' (' + uploadManager.format(this.size) + ')').shorten(), title: this.filename});
-										this.fields.style.display = '';
-									}.pass(null, this)).delay(50)
-								}.pass(null, this));
+								this.progress.setValue(1);
+																	
+								this.span.setStyle('display', 'none');
+								this.fields.getElement('label').set({text: (this.filename + ' (' + uploadManager.format(this.size) + ')').shorten(), title: this.filename});
+								this.fields.style.display = '';
 																
 								if (xhr.readyState != 4) {
 								
@@ -362,7 +353,6 @@ String.implement({shorten: function (max, end) {
 								this.running = false;
 								
 								try { status = xhr.status } catch(e) {}
-								//xhr.onreadystatechange = function(){};
 								
 								//success
 								if (status >= 200 && status < 300) {
@@ -444,26 +434,22 @@ String.implement({shorten: function (max, end) {
 				this.size = file.size;
 				this.filename = file.name;
 				
-				
 				var first = this.element.getFirst(),
-					width = this.width = first.offsetWidth - 6,
-					name = file.name.shorten(),
-					style = 'position:absolute;display:inline-block;margin:0 auto;left:0;top:0',
-					span = this.span = first.getElement('span').
-						set({style: 'width:' + width + 'px;position:relative;border:1px solid #aaa;display:inline-block;text-align:center;', title: file.name}).
-						adopt(new Element('span', {style: 'z-index:1;width:' + width + 'px;margin:0 auto;color:#aaa;' + style, text: name})).
-						adopt(new Element('span', {style: 'z-index:2;overflow:hidden;width:1px;' + style}).
-									adopt(new Element('span', {style: 'width:' + width + 'px;margin:0 auto;color:#fff;display:inline-block', text: name}))
-							).
-						adopt(new Element('span', {html: '&nbsp;', style: 'width:1px;background:#aaa;' + style})),
-					children = span.getChildren();
-							
-				first.setStyle('width', first.offsetWidth);
+					progress = this.progress = new ProgressBar({
+					
+						container: first.set('title', file.name),
+						text: file.name.shorten(),
+						onComplete: function () {
+						
+							(function () { $(progress).destroy() }).delay(10)
+						}
+					}),
+					span = this.span = first.getElement('span').setStyle('display', 'none');
 				
-				this.progress = new Fx.Elements([children.pop(), children.pop()], {link: 'cancel'});
-												
 				this.fields = span.getNext().setStyle('display', 'none');
-				this.fields.getFirst().style.display = 'none';				
+				this.fields.getFirst().style.display = 'none';
+				this.element.getElement('input[type=file]').destroy();	
+				
 				uploadManager.enqueue(this.options.container, this.upload.pass(null, this));
 				if(this.reader) this.reader.readAsBinaryString(file);
 				return this
