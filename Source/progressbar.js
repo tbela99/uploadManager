@@ -35,25 +35,46 @@ var ProgressBar = new Class({
 		
 		var container = document.id(this.options.container),
 			width = this.options.width || container.offsetWidth,
-			style = 'position:absolute;display:inline-block;margin:0 auto;left:0;top:0';
+			style = 'position:absolute;display:inline-block;margin:0 auto;left:0;top:0',
+			self = this,
+			timer,
+			change = function () {
+			
+				if(self.element.getLast()) self.value = self.element.getLast().offsetWidth / self.width;
+				self.fireEvent('change', [self.value, self])
+			},
+			clear = function () {
+			
+				clearTimeout(timer);
+				change()
+			};
 			
 		this.width = width || 1;
+		this.value = 0;
 		
 		options = this.options;
 		
 		this.element = new Element('span').
 						inject(container).
-						set({style: 'width:' + width + 'px;position:relative;border:1px solid ' + options.fillColor + ';background:' + options.color + ';display:inline-block;text-align:center;'}).
-						adopt(new Element('span', {style: 'z-index:1;width:' + width + 'px;margin:0 auto;color:' + options.fillColor + ';' + style, text: options.text})).
+						set({style: 'width:' + width + 'px;position:relative;border:1px solid ' + options.fillColor + ';background:' + options.color + ';display:inline-block;'}).
+						adopt(new Element('span', {style: 'z-index:1;width:' + width + 'px;text-indent:5px;margin:0 auto;color:' + options.fillColor + ';' + style, text: options.text})).
 						adopt(new Element('span', {style: 'z-index:2;overflow:hidden;width:' + this.options.value + 'px;' + style}).
-									adopt(new Element('span', {style: 'width:' + width + 'px;margin:0 auto;color:' + options.color + (options.backgroundImage ? ';background: url(' + options.backgroundImage + ') repeat-x' : '') + ';display:inline-block', text: options.text}))
+									adopt(new Element('span', {style: 'width:' + width + 'px;text-indent:5px;margin:0 auto;color:' + options.color + (options.backgroundImage ? ';background: url(' + options.backgroundImage + ') repeat-x' : '') + ';display:inline-block', text: options.text}))
 							).
 						adopt(new Element('span', {html: '&nbsp;', style: 'width:' + this.options.value + 'px;background:' + options.fillColor + ';' + style}));
 		
 		last = this.element.getLast();
 		this.element.setStyle('height', last.offsetHeight);
 		this.elements = $$(this.element.getFirst(), this.element.getElement('span span'));
-		this.progress = new Fx.Elements([last, last.getPrevious()], {link: 'cancel'});
+		this.progress = new Fx.Elements([last, last.getPrevious()], {
+																		link: 'cancel', 
+																		onStart: function () {
+																	
+																			timer = setTimeout(change, 10)
+																		},
+																		onCancel: clear,
+																		onComplete: clear
+																});
 		if(this.options.text === '') this.elements[1].set('html', '&nbsp;');
 		this.setValue(this.options.value)
 	},
@@ -75,10 +96,10 @@ var ProgressBar = new Class({
 			
 			var tween = {width: value * this.width},
 				self = this;
+				
 			this.progress.start({0: tween, 1: tween}).chain(function () {
 			
-				self.fireEvent('change', value);
-				if(value == 1) self.fireEvent('complete')
+				if(value == 1) self.fireEvent('complete', self)
 			})
 		}
 		
@@ -86,6 +107,6 @@ var ProgressBar = new Class({
 	},
 	getValue: function () {
 	
-		return this.element.getLast().offsetWidth / this.width
+		return self.value
 	}
-})
+});

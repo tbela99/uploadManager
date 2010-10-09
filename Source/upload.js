@@ -435,7 +435,7 @@ String.implement({shorten: function (max, end) {
 				this.filename = file.name;
 				
 				var first = this.element.getFirst(),
-					progress = this.progress = new ProgressBar({
+					progress = this.progress = new ProgressBar($merge({
 					
 						container: first.set('title', file.name),
 						text: file.name.shorten(),
@@ -443,7 +443,7 @@ String.implement({shorten: function (max, end) {
 						
 							(function () { $(progress).destroy() }).delay(10)
 						}
-					}),
+					}, this.options.progressbar)),
 					span = this.span = first.getElement('span').setStyle('display', 'none');
 				
 				this.fields = span.getNext().setStyle('display', 'none');

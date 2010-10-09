@@ -26,6 +26,17 @@ window.addEvent('domready', function() {
 			//filetype: 'html,rar,zip',
 			name: 'files[]',
 			multiple: true,
+			progressbar: {
+
+				color: '#000', 
+				fillColor: '#fff',
+				text: 'Pending...',
+				onChange: function (value, progressbar) {
+				
+					//console.log(arguments)
+					progressbar.setText('completed: ' + (100 * value).format() + '%')
+				}
+			},
 			onAbort: function (object) {
 			
 				alert(object.message)

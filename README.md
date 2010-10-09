@@ -46,6 +46,32 @@ create a new upload field.
 - filetype - (*string*, optional) authorized file type.
 - name - (*string*) name of the upload form field. it contains the original name of the file sent by the user. if the upload succeed a hidden field named *'file_' + name* and containing the encrypted file path on the server will be pushed into the form.
 for example if our form field is named *name[]*, then *name[]* will contains the original file name and *file_name[]* will contains the encrypted file path on the server.
+- progressbar - (*object*, optional) progressbar options. see [Progressbar](http://github.com/tbela99/progressbar/)
+
+##### Progressbar:
+
+- container - (*mixed*) progressbar container.
+- width - (*int*, optional) progressbar width. default to the container width.
+- value - (*number*, optional) initial value of the progressbar. value is always between 0 and 1 (100%). default to 0. 
+- text - (*string*, optional) progressbar text.
+- color - (*string*, optional) progressbar color.
+- fillColor - (*string*, optional) progressbar fill color.
+- backgroundImage - (*string*, optional) background image used to fill the progressbar. this parameter will shadow the fillColor parameter.
+
+##### Progressbar events:
+
+##### onChange
+
+##### Arguments:
+
+- value - (*number*) progressbar value. it is a number between 0 and 1
+- progressbar - (*object*) progressbar.
+
+##### onComplete
+
+##### Arguments:
+
+- progressbar - (*object*) progressbar.
 
 
 ##### Events:
@@ -53,10 +79,6 @@ for example if our form field is named *name[]*, then *name[]* will contains the
 ##### onCreate
 
 Fired after the upload instance has been created.
-
-##### Arguments:
-
-- id - (*object*) upload transfer instance id. you can retrieve this instance with uploadManager.get(id). it is also the id of the input checkbox 
 
 ##### onLoad
 
