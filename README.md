@@ -74,7 +74,7 @@ for example if our form field is named *name[]*, then *name[]* will contains the
 - progressbar - (*object*) progressbar.
 
 
-##### Events:
+##### Upload events:
 
 ##### onCreate
 
