@@ -101,5 +101,5 @@ var ProgressBar = new Class({
 		
 		return this
 	},
-	getValue: function () { return self.value }
+	getValue: function () { return this.value }
 });
