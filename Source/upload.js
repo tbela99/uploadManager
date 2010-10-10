@@ -337,9 +337,9 @@ String.implement({shorten: function (max, end) {
 							}).						
 					add(xhr, 'load', function() {
 
-								this.progress.setValue(1);
+								var progress = this.progress.setValue(1);
 																	
-								this.span.setStyle('display', 'none');
+								(function () { $(progress).destroy() }).delay(10);
 								this.fields.getElement('label').set({text: (this.filename + ' (' + uploadManager.format(this.size) + ')').shorten(), title: this.filename});
 								this.fields.style.display = '';
 																
@@ -435,21 +435,19 @@ String.implement({shorten: function (max, end) {
 				this.filename = file.name;
 				
 				var first = this.element.getFirst(),
-					progress = this.progress = new ProgressBar($merge({
+					span = first.getElement('span').setStyle('display', 'none');
+				
+				this.progress = new ProgressBar($merge({
 					
 						container: first.set('title', file.name),
-						text: file.name.shorten(),
-						onComplete: function () {
-						
-							(function () { $(progress).destroy() }).delay(10)
-						}
-					}, this.options.progressbar)),
-					span = this.span = first.getElement('span').setStyle('display', 'none');
-				
+						text: file.name.shorten()
+					}, this.options.progressbar));
+					
 				this.fields = span.getNext().setStyle('display', 'none');
 				this.fields.getFirst().style.display = 'none';
 				this.element.getElement('input[type=file]').destroy();	
 				
+				span.destroy();
 				uploadManager.enqueue(this.options.container, this.upload.pass(null, this));
 				if(this.reader) this.reader.readAsBinaryString(file);
 				return this
