@@ -43,7 +43,18 @@ var win = parent.window,
 			
 			if(this.length > max) return this.substring(0, max - end - 3) + '... ' + this.substring(this.length - end + 1);
 			return this
+		};
+		
+	Number.prototype.toFileSize = function(units) {
+		
+			if(this == 0) return 0;
+			
+			var s = ['bytes', 'kb', 'MB', 'GB', 'TB', 'PB'],
+				e = Math.floor(Math.log(this) / Math.log(1024));
+
+			return (this / Math.pow(1024, Math.floor(e))).toFixed(2) + " " + (units && units[e] ? units[e] : s[e]);
 		}
+
 
 </script>
 </head>
@@ -76,7 +87,6 @@ var win = parent.window,
 	?>; uploadManager.get(id).addEvent(\'onCancel\', function () {<?php
 	
 	?> $(id + \'_label\').innerHTML = \'\';<?php
-	?><?php
 	
 	?>$(id + \'_iframe\').style.display=\'block\'}).cancel(); return false;">Annuler</a>');
 	
@@ -104,10 +114,10 @@ var win = parent.window,
 	win.$(id + '_label').set('html', '<label for="<?php echo $f_; ?>" title="<?php echo addslashes(htmlentities($file[0]['name'], null, 'utf-8')); ?>">' + '<?php 
 	
 		echo addslashes(htmlentities($file[0]['name'], null, 'utf-8')); 
-	?>'.shorten() + ' (' + uploadManager.format(<?php 
+	?>'.shorten() + ' (' + (<?php 
 	
 		echo $filesize; 
-	?>) + ')</label><a href="<?php 
+	?>).toFileSize() + ')</label><a href="<?php 
 	
 		echo uploadHelper::route($self); 
 	?>" onclick="var id = <?php 
@@ -150,9 +160,8 @@ var win = parent.window,
 		?>,
 		transfer = uploadManager.get(id),
 		container = transfer.options.container;
-	
-	
-		uploadManager.enqueue(container, function () {
+		
+		uploadManager.push(container, function () {
 		
 			var transfer = win.uploadManager.get(id).load(file);
 			

@@ -42,8 +42,12 @@ String.implement({shorten: function (max, end) {
 			//upload hash
 			uploads: {},
 			
+			active: false,
 			//active transfers
 			actives: {},
+			
+			//queue uploads per container
+			enqueue: false,
 			
 			//transfer queue, callback functions
 			queue: {},
@@ -55,11 +59,7 @@ String.implement({shorten: function (max, end) {
 			
 			attachDragEvents: function (el, options) {
 			
-				el = $(el);
-				if(!el.retrieve(store)) new Element('div', {style: 'display:none', text: 'Drop files here' }).
-								inject($(el).
-								addEvents(dragdrop).
-								store(store, options), 'top');					
+				$(el).addEvents(dragdrop).store(store, options).grab(new Element('div', {text: 'Drop files here', 'style': 'display:none'}), 'top');								
 				return this
 			},
 
@@ -101,7 +101,7 @@ String.implement({shorten: function (max, end) {
 				return transfer.fireEvent('create', opt.id)
 			},
 			
-			enqueue: function(container, callback) {
+			push: function(container, callback) {
 			
 				this.queue[container] = this.queue[container] || [];				
 				this.queue[container].push(callback);
@@ -109,44 +109,34 @@ String.implement({shorten: function (max, end) {
 				return this.load(container)
 			},
 			
-			/*
-			
-				TODO: implement the maximum concurrent transfer limit
-			*/
-			
 			load: function (container) {
 			
-				var callback = this.queue[container].shift();
-				if(callback) callback();
+				if(!this.enqueue || !this.active) {
+					
+					var callback = this.queue[container].shift();
+					if(callback) {
+					
+						this.active = true;
+						callback()
+					}
+				}
+				
 				return this
 			},
 			
 			//return Transfert associated to a given id
 			get: function (id) { return $(id).retrieve(transport) },
-						
-			getSize: function(container, convert) { 
+										
+			getSize: function(container) { 
 				
 				var size  = 0;
-				
 				(this.uploads[container] || []).each(function (transfer) { size += transfer.filesize });
 				
-				return convert ? this.format(size) : size
+				return size
 			},
-			
+
 			//return a copy of the internal list
-			getTransfers: function (container) {
-			
-				return (this.uploads[container] || []).map(function (t) { return t })
-			},
-			
-			format: function (size) {
-					
-				if(size == 0) return size;
-				if (size < 1024) return size + ' ' + 'Bytes';
-				if (size < 1024 * 1024) return (size / 1024.).format() + ' Kb';
-				if (size < 1024 * 1024 * 1024) return (size / (1024 * 1024.)).format() + ' Mb';
-				return (size / (1024 * 1024 * 1024.)).format() + ' Gb';
-			}
+			getTransfers: function (container) { return (this.uploads[container] || []).map(function (t) { return t }) }
 		},
 		dragdrop = {
 					
@@ -170,9 +160,11 @@ String.implement({shorten: function (max, end) {
 										}).tween('backgroundColor', '#1096E6')										
 			},	
 			
-			dragexit: function(e) { e.stop() },	
-			
-			mouseleave: function (e) { this.getFirst().style.display = 'none' },
+			dragexit: function(e) {
+				
+				e.stop(); 
+				this.getFirst().style.display = 'none'
+			},	
 			
 			dragover: function(e) { e.stop() },
 			
@@ -202,15 +194,11 @@ String.implement({shorten: function (max, end) {
 					if(this.aborted) this.message = 'unauthorized file type'
 				});
 					
-				var element,
-					container = options.container;
+				var element, container = options.container;
 					
 				this.addEvents({
 		
-						load: function () {
-													
-							uploadManager.actives[container].push(this)
-						},
+						load: function () { uploadManager.actives[container].push(this) },
 						
 						success: function (json) {
 							
@@ -240,29 +228,37 @@ String.implement({shorten: function (max, end) {
 							uploadManager.actives[container].erase(this)
 						},
 						
-						complete: function () {  
+						complete: function () { 
 						
-							if(uploadManager.actives[container].length == 0) this.fireEvent('allComplete', container)
+							if(uploadManager.actives[container].length == 0 && uploadManager.queue[container].length == 0) {
+							
+								uploadManager.active = false;
+								this.fireEvent('allComplete', container) 
+							}
+							else if(uploadManager.enqueue) {
+							
+								uploadManager.active = false;
+								uploadManager.load(container)							
+							}
 						}
-						
 					}).setOptions(options);
 				
 				element = this.createElement(options);
 				element.getElement('#' + options.id).store(transport, this);					
-				element.getElement('a').addEvent("click", function(e) { 
+				element.getElement('a.cancel-upload').addEvent("click", function(e) { 
 						
-						e.stop(); 
-						this.cancel() 
+					e.stop(); 
+					this.cancel() 
 				}.pass(null, this))
 			},
 			
 			createElement: function (options) {
 			
 				this.element = new Element('div', {'class': 'upload-container',
-								html: '<iframe id="' + options.id + '_iframe" src="' + options.base + ( options.base.indexOf('?') == -1 ? '?' : '&') + options.id + '" frameborder="0" scrolling="no" style="border:0;overflow:hidden;padding:0;display:block;float:left;height:20px;width:228px; "></iframe>'
+								html: '<iframe id="' + options.id + '_iframe" src="' + options.base + ( options.base.indexOf('?') == -1 ? '?' : '&') + options.id + '" frameborder="no" scrolling="no" style="border:0;overflow:hidden;padding:0;display:block;float:left;height:20px;width:228px; "></iframe>'
 								+ '<input type="checkbox" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
 								+ '<input type="checkbox" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
-								+ '<span class="upload-span" id="' + options.id + '_label"><a href="' + options.base + '">Remove</a></span>'
+								+ '<span class="upload-span" id="' + options.id + '_label"><a class="cancel-upload" href="' + options.base + '">Remove</a></span>'
 							}).inject(options.container);
 					
 				return this.element
@@ -319,57 +315,59 @@ String.implement({shorten: function (max, end) {
 					
 					cancel: function () {
 				
-							if(this.running) {
-							
-								this.xhr.abort();
-								xhr = this.xhr = new XMLHttpRequest();
-								this.running = false
-							}
+						if(this.running) {
+						
+							this.xhr.abort();
+							xhr = this.xhr = new XMLHttpRequest();
+							this.running = false
 						}
+					}
 								
 				}).parent(options);
 					
 				this.binary = !!xhr.sendAsBinary;
 					
-				this.add(xhr.upload, 'progress', function(e) {
-
-								if (e.lengthComputable) this.progress.setValue(e.loaded / e.total)
-							}).						
+				this.add(xhr.upload, 'progress', function(e) { if (e.lengthComputable) this.progress.setValue(e.loaded / e.total) }).						
 					add(xhr, 'load', function() {
 
-								var progress = this.progress.setValue(1);
-																	
-								(function () { $(progress).destroy() }).delay(10);
-								this.fields.getElement('label').set({text: (this.filename + ' (' + uploadManager.format(this.size) + ')').shorten(), title: this.filename});
-								this.fields.style.display = '';
-																
-								if (xhr.readyState != 4) {
+						var progress = $(this.progress.setValue(1)),
+							self = this;
 								
-									this.fireEvent('failure', this).fireEvent('complete', this);
-									return
-								}
+						(function () {
+						
+							progress.style.display = 'none';
+							self.fields.getElement('label').set({text: (self.filename + ' (' + self.size.toFileSize() + ')').shorten(), title: self.filename});
+							self.fields.style.display = '';
+							(function () { progress.destroy() }).delay(50)
+						}).delay(10);
 								
-								var status, json, event = 'success';
-								this.running = false;
-								
-								try { status = xhr.status } catch(e) {}
-								
-								//success
-								if (status >= 200 && status < 300) {
-								
-									try { 
-									
-										json = JSON.decode(xhr.responseText);
-										json.transfer = this;
-										json.element = this.element;						
-										if(json.size != this.size) event = 'failure'
-									}					
-									catch(e) { event = 'failure' }
-									
-								} else event = 'failure';
-									
-								this.fireEvent(event, event == 'failure' ? this : json).fireEvent('complete', this)	
-							}).
+						if (xhr.readyState != 4) {
+						
+							this.fireEvent('failure', this).fireEvent('complete', this);
+							return
+						}
+						
+						var status, json, event = 'success';
+						this.running = false;
+						
+						try { status = xhr.status } catch(e) {}
+						
+						//success
+						if (status >= 200 && status < 300) {
+						
+							try { 
+							
+								json = JSON.decode(xhr.responseText);
+								json.transfer = this;
+								json.element = this.element;						
+								if(json.size != this.size) event = 'failure'
+							}					
+							catch(e) { event = 'failure' }
+							
+						} else event = 'failure';
+							
+						this.fireEvent(event, event == 'failure' ? this : json).fireEvent('complete', this)	
+					}).
 					add(xhr, 'error', function() {
 
 								this.span.style.display = 'none';
@@ -396,7 +394,7 @@ String.implement({shorten: function (max, end) {
 						+ '<input type="checkbox" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
 						+ '<input type="checkbox" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
 						+ '<label for="'+ options.id + '"></label>'
-						+ '</span></div><a href="' + options.base + '">Remove</a>'
+						+ '</span></div><a class="cancel-upload" href="' + options.base + '">Remove</a>'
 					}).inject(options.container);
 							
 				var input = this.element.getElement('input[type=file]').addEvent('change', function (e) {
@@ -439,16 +437,16 @@ String.implement({shorten: function (max, end) {
 				
 				this.progress = new ProgressBar($merge({
 					
-						container: first.set('title', file.name),
-						text: file.name.shorten()
-					}, this.options.progressbar));
+							container: first.set('title', file.name),
+							text: file.name.shorten()
+						}, this.options.progressbar));
 					
 				this.fields = span.getNext().setStyle('display', 'none');
 				this.fields.getFirst().style.display = 'none';
 				this.element.getElement('input[type=file]').destroy();	
 				
 				span.destroy();
-				uploadManager.enqueue(this.options.container, this.upload.pass(null, this));
+				uploadManager.push(this.options.container, this.upload.pass(null, this));
 				if(this.reader) this.reader.readAsBinaryString(file);
 				return this
 			},

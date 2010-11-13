@@ -28,6 +28,12 @@ window.addEvent('domready', function() {
 			multiple: true,
 			progressbar: {
 
+				/*
+				
+					fix the progressbar width
+				*/
+				
+				width: 140,
 				color: '#000', 
 				fillColor: '#fff',
 				text: 'Pending...',
@@ -44,12 +50,12 @@ window.addEvent('domready', function() {
 			onCancel: function () {
 			
 				//upload size
-				$('infos').set('html', uploadManager.getSize('upload', true));
+				$('infos').set('html', uploadManager.getSize('upload').toFileSize());
 			},
 			onSuccess: function (infos) {
 							
 				//upload size
-				$('infos').set('html', uploadManager.getSize('upload', true));
+				$('infos').set('html', uploadManager.getSize('upload').toFileSize());
 				//download link
 				new Element('span', {html: '<a href="../php/upload.php?' + infos.path + '&dl=1&filename=' + infos.file + '">download</a> -&nbsp;'}).inject($(infos.transfer).getElement('a'), 'before')
 			},
@@ -57,8 +63,12 @@ window.addEvent('domready', function() {
 			
 				alert('all transfers completed for "' + container + '"');
 			}
-		};
+		},
+		fn = function () { uploadManager.enqueue = this.checked };
 	
+	$('queue').addEvents({click: fn, change: fn});
+	
+	//enable file drag drop
 	uploadManager.attachDragEvents('upload', options);
 	
 	document.getElement('a').addEvent('click', function(e) {
@@ -70,7 +80,7 @@ window.addEvent('domready', function() {
 </script>
 </head>
 
-<body><form action="" method="get"><a href="#">Upload a file</a> [upload size: <span id="infos">0</span>]
+<body><form action="" method="get"><a href="#">Upload a file</a> [upload size: <span id="infos">0</span>]<br/><input type="checkbox" id="queue"/> <label for="queue">Upload queue</label></form>
 <div id="upload"></div></form>
 </body>
 </html>

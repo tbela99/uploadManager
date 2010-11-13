@@ -34,13 +34,13 @@ var ProgressBar = new Class({
 		options = this.setOptions(options).options;
 		
 		var container = document.id(this.options.container),
-			width = options.width || container.offsetWidth,
+			width = this.width = options.width || container.getStyle('width').toInt() || 1,
 			style = 'position:absolute;display:inline-block;margin:0 auto;left:0;top:0',
 			self = this,
 			timer,
 			change = function () {
 			
-				self.value = last.offsetWidth / self.width;
+				self.value = last.getStyle('width').toInt() / self.width;
 				self.fireEvent('change', [self.value, self])
 			},
 			clear = function () {
@@ -50,20 +50,17 @@ var ProgressBar = new Class({
 			},
 			last;
 			
-		this.width = width || 1;
 		this.value = 0;
-		
-		this.element = new Element('span').
+		this.element = new Element('span', {style: 'width:' + width + 'px;position:relative;border:1px solid ' + options.fillColor + ';background:' + options.color + ';display:inline-block;'}).
 						inject(container).
-						set({style: 'width:' + width + 'px;position:relative;border:1px solid ' + options.fillColor + ';background:' + options.color + ';display:inline-block;'}).
-						adopt(new Element('span', {style: 'z-index:1;width:' + width + 'px;text-indent:5px;margin:0 auto;color:' + options.fillColor + ';' + style, text: options.text})).
-						adopt(new Element('span', {style: 'z-index:2;overflow:hidden;width:' + options.value + 'px;' + style}).
-									adopt(new Element('span', {style: 'width:' + width + 'px;text-indent:5px;margin:0 auto;color:' + options.color + (options.backgroundImage ? ';background: url(' + options.backgroundImage + ') repeat-x' : '') + ';display:inline-block', text: options.text}))
+						grab(new Element('span', {style: 'z-index:1;width:' + width + 'px;text-indent:5px;margin:0 auto;color:' + options.fillColor + ';' + style, text: options.text})).
+						grab(new Element('span', {style: 'z-index:2;overflow:hidden;width:' + options.value + 'px;' + style}).
+									grab(new Element('span', {style: 'width:' + width + 'px;text-indent:5px;margin:0 auto;color:' + options.color + (options.backgroundImage ? ';background: url(' + options.backgroundImage + ') repeat-x' : '') + ';display:inline-block', text: options.text}))
 							).
-						adopt(new Element('span', {html: '&nbsp;', style: 'width:' + options.value + 'px;background:' + options.fillColor + ';' + style}));
+						grab(new Element('span', {html: '&nbsp;', style: 'width:' + options.value + 'px;background:' + options.fillColor + ';' + style}));
 		
 		var last = this.element.getLast();
-		this.element.setStyle('height', last.offsetHeight);
+		this.element.setStyle('height', last.getStyle('height'));
 		this.elements = $$(this.element.getFirst(), this.element.getElement('span span'));
 		this.progress = new Fx.Elements([last, last.getPrevious()], {
 																		link: 'cancel', 
