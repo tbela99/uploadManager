@@ -175,7 +175,7 @@ String.implement({shorten: function (max, end) {
 				var el = this, options = el.retrieve(store);
 				
 				el.getFirst().style.display = 'none';
-				if(e.event.dataTransfer) $A(e.event.dataTransfer.files).each(function (f) { uploadManager.upload(options).load(f) })
+				if(e.event.dataTransfer) Array.from(e.event.dataTransfer.files).each(function (f) { uploadManager.upload(options).load(f) })
 			}
 		},
 		
