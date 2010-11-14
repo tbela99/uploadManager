@@ -1,24 +1,28 @@
 uploadManager
 ============
 
-mootools ajax file upload with:
+mootools 1.3 ajax file upload with:
 
-- file drag drop on upload container (currently supported by chrome5+ and firefox 3.6+)
-- no iframe and progress bar for browsers that support HTML5 File API (chrome5+, safari4+, Firefox 3.6+)
+- file drag drop (currently supported by chrome5+ and firefox 3.6+)
+- progress bar for browsers that support HTML5 File API (chrome5+, safari4+, Firefox 3.6+)
+- no input file for Firefox 4
 - iframe for the others
+- customizable by css (fully customizable in firefox 4 and later)
+- easy to use
 
 [Demo](http://tbela.fragged.org/demos/upload/Demo/)
-
+![Screenshot](http://github.com/tbela99/uploadManager/raw/master/screenshot.png)
 
 How does it work
 ---------------------
 
-the Ajax file upload place uploaded files in a temporary folder of the server.
+uploadManager uploads files in a temporary folder of your webserser and pull back the uploaded file name and its path in the form, so you can send them along with the rest of the form.
+you will need a webserver with php installed to run the demo.
 
 # Setup server side upload
 
 you must indicate the temp upload folder by editing the constant *TEMP_PATH* in *upload.php*. you will need to create the folder and allow the script to create file in it.
-you must also change the methods *uploadHelper::encrypt()* and *uploadHelper::decrypt()* in the file uploadhelper.php to provide a better encryption method.
+you should also change the methods *uploadHelper::encrypt()* and *uploadHelper::decrypt()* in the file uploadhelper.php to provide a better encryption method.
 
 # the client side upload
 
@@ -29,6 +33,45 @@ you must also change the methods *uploadHelper::encrypt()* and *uploadHelper::de
 		border: 1px solid #ccc;
 		max-width: 300px;
 		min-height: 100px;
+	}
+
+	/*
+
+		cancel upload button
+	*/
+	.cancel-upload {
+
+		background:#ccc;
+		border: 1px solid #999999;
+		color: #000000;
+		display: inline-block;
+		margin: 5px 5px 0 3px;
+		padding: 2px 5px;
+	}
+	.cancel-upload:hover {
+
+		background: #aaa;
+		color: #fff;
+	}
+	
+	/*
+
+		browse button style: currently supported only by Firexox 4+
+	*/
+
+	.browse-upload {
+
+		background:#ccc;
+		border: 1px solid #999999;
+		color: #000000;
+		display: inline-block;
+		margin: 5px 5px 0 0;
+		padding: 2px 5px;
+	}
+	.browse-upload:hover {
+
+		background: #aaa;
+		color: #fff;
 	}
 
 ### HTML:
@@ -52,8 +95,19 @@ you must also change the methods *uploadHelper::encrypt()* and *uploadHelper::de
 			//form field name
 			name: 'names[]',
 			
-			//enable multiple file selection
-			multiple: true
+			multiple: true, //enable multiple selection in file dialog
+			progressbar: {
+
+				width: 140, //fix the progressbar width, optional
+				color: '#000', 
+				fillColor: '#fff',
+				text: 'Pending...',
+				onChange: function (value, progressbar) {
+				
+					//console.log(arguments)
+					progressbar.setText('completed: ' + (100 * value).format() + '%')
+				}
+			},
 		};
 	
 	//enable file drag drop on $('upload')
@@ -73,7 +127,7 @@ when the upload succeed, two fields are pushed into the form:
 
 # Handling the form submission
 
-in your php form submission handler, getting the file name is a trivial task.
+in your php form submission handler, getting the file name is a trivial task. you should move files from the temp directory to the final location
 
 	<?php
 	

@@ -13,21 +13,24 @@ mootools 1.3 ajax file upload with:
 [Demo](http://tbela.fragged.org/demos/upload/Demo/)
 ![Screenshot](http://github.com/tbela99/uploadManager/raw/master/screenshot.png)
 
-
 How to use
 ---------------------
 
-uploadManager uploads files in a temparay folder of your webserser and pull back the uploaded file name and its path in the form, so you can send them along with the rest of the form.
-you will need a webserver with php installed to run the demo.
+uploadManager uploads files in a temporary folder of your webserser and pull back the uploaded file name and its path in the form, so you can send them along with the rest of the form.
+you will need a webserver with php installed to run the demo. 
+for a detailed usage see HOWTO.md in the Docs folder.
 
 # uploadManager
 
-
-.
+creates and manage uploads
 
 ### uploadManager Property: xmlhttpupload
 
 (*boolean*) indicates if the browser handle file upload via XMLHTTPRequest.
+
+### uploadManager Property: enqueue
+
+(*boolean*) queue upload. by default upload are not queued.
 
 ### uploadManager Method: upload {#uploadManager:upload}
 ------------
@@ -36,7 +39,7 @@ create a new upload field.
 
 ### Returns:
 
-* (*object*) - file upload instance or null if the the maximum number of files that can be uploaded is reached.
+* (*object*) - file upload instance. if the the maximum number of files that can be uploaded is reached null is returned instead.
 
 #### Arguments:
 
@@ -56,7 +59,7 @@ for example if our form field is named *name[]*, then *name[]* will contains the
 ##### Progressbar:
 
 - container - (*mixed*) progressbar container.
-- width - (*int*, optional) progressbar width. default to the container width.
+- width - (*int*, optional) progressbar width.
 - value - (*number*, optional) initial value of the progressbar. value is always between 0 and 1 (100%). default to 0. 
 - text - (*string*, optional) progressbar text.
 - color - (*string*, optional) progressbar color.
@@ -85,6 +88,10 @@ for example if our form field is named *name[]*, then *name[]* will contains the
 
 Fired after the upload instance has been created.
 
+##### Arguments:
+
+- transfer - (*object*) file upload instance
+
 ##### onLoad
 
 Fired before the file is uploaded.
@@ -95,7 +102,7 @@ Fired before the file is uploaded.
 
 ##### Options:
 
-- element - (*element*) the upload field instance container.
+- element - (*element*) the file upload instance container.
 - file - (*string*) the file name.
 - size - (*int*) file size. if the browser supports XMLHTTPRequest file upload, this will be the actual file size, otherwise it will be 0.
 - transfer - (*object*) file upload instance.
@@ -152,7 +159,7 @@ Fired when the transfer is complete.
 
 ##### Arguments:
 
-- transfer - (*object*) upload file instance
+- transfer - (*object*) file upload instance
 
 ##### onAllComplete
 
@@ -165,7 +172,7 @@ Fired when all transfer are completed.
 ### uploadManager Method: attachDragEvents
 ------------
 
-enable files to be uploaded when they are dropped on an element. this happen if the browser supports file drag drop.
+enable files to be uploaded when they are dropped on an element. this happens only if the browser supports file drag drop.
 
 ### Returns:
 
@@ -202,19 +209,6 @@ return the [file upload instance](#uploadManager:instance) with the given id.
 
 1. id - (*string*) file upload instance id.
 
-### uploadManager Method: format
-------------
-
-format file size for reading.
-
-### Returns:
-
-* (*mixed*)
-
-#### Arguments:
-
-1. size - (*int*)
-
 ### uploadManager Method: getSize
 ------------
 
@@ -229,7 +223,7 @@ return uploaded file size for a given container.
 1. container - (*string*) container id
 2. convert - (*boolean*) convert the result
 
-return all the upload file instance of a given container.
+return all the file upload instance of a given container.
 
 ### Returns:
 
@@ -249,9 +243,7 @@ object wrapping a file upload instance.
 
 Options, Events. see [uploadManager#upload](#uploadManager:upload) for implemented options and events.
 
-### uploadManager Properties:
+### File upload instance Properties:
 ------------
 - completed - (*boolean*) true if the file has been succesfully uploaded
 - filesize - (*int*) the uploaded file size in byte.
-
-

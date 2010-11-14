@@ -3,14 +3,61 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>File Upload</title>
-<style type="text/css">
+<style type="text/css">body {
+
+	font-size: 90%;
+}
+
 #upload {
 
 	border: 1px solid #ccc;
 	max-width: 300px;
 	min-height: 100px;
+	position: relative;
 }
-</style>
+a {
+
+	text-decoration: none;
+}
+
+/*
+
+	cancel upload button
+*/
+.cancel-upload {
+
+	background:#ccc;
+	border: 1px solid #999999;
+	color: #000000;
+	display: inline-block;
+	margin: 5px 5px 0 3px;
+	padding: 2px 5px;
+}
+.cancel-upload:hover {
+
+	background: #aaa;
+	color: #fff;
+}
+
+/*
+
+	browse button style: currently supported only by Firexox 4+
+*/
+
+.browse-upload {
+
+	background:#ccc;
+	border: 1px solid #999999;
+	color: #000000;
+	display: inline-block;
+	margin: 5px 5px 0 0;
+	padding: 2px 5px;
+}
+.browse-upload:hover {
+
+	background: #aaa;
+	color: #fff;
+}</style>
 <script type="text/javascript" src="../mootools-core.js"></script>
 <script type="text/javascript" src="../number.js"></script>
 <script type="text/javascript" src="../Source/progressbar.js"></script>
@@ -22,8 +69,9 @@ window.addEvent('domready', function() {
 	var options = {
 		
 			container: 'upload',
-			base: '../php/upload.php',
-			name: 'files[]',
+			//filetype: 'html,rar,zip',
+			name: 'alias',
+			//limit: 2, /* limit to two downloads */
 			multiple: true, //enable multiple selection in file dialog
 			progressbar: {
 
@@ -37,6 +85,13 @@ window.addEvent('domready', function() {
 					progressbar.setText('completed: ' + (100 * value).format() + '%')
 				}
 			},
+		/*
+			
+			onCreate: function (transfer) {
+			
+				//do something
+			},
+		*/
 			onAbort: function (object) {
 			
 				alert(object.message)
@@ -50,19 +105,23 @@ window.addEvent('domready', function() {
 							
 				//upload size
 				$('infos').set('html', uploadManager.getSize('upload').toFileSize());
+				//console.log(infos.file);
 				//download link
-				new Element('span', {html: '<a href="../php/upload.php?' + infos.path + '&dl=1&filename=' + infos.file + '">download</a> -&nbsp;'}).inject($(infos.transfer).getElement('a'), 'before')
+				new Element('span', {html: '<a href="upload.php?' + infos.path + '&dl=1&filename=' + infos.file + '">download</a> -&nbsp;'}).inject($(infos.transfer).getElement('a'), 'before')
 			},
 			onAllComplete: function (container) {
 			
-				alert('all transfers completed for "' + container + '"');
+				var message = 'all transfers completed for "' + container + '"';
+				
+				if(window.console && console.log) console.log(message);
+				else alert(message);
 			}
 		},
 		fn = function () { uploadManager.enqueue = this.checked };
 	
+	//enable/disable queue
 	uploadManager.enqueue = $('queue').addEvents({click: fn, change: fn}).checked;
 	
-	//enable file drag drop
 	uploadManager.attachDragEvents('upload', options);
 	
 	document.getElement('a').addEvent('click', function(e) {
