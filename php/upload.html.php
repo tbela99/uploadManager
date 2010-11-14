@@ -126,7 +126,7 @@ var win = parent.window,
 	?>, transfer = uploadManager.get(id), iframe = $(id + \'_iframe\'); iframe.set({events: {\'load\': function () { setTimeout(function () { transfer.cancel() }, 10) }}, src: \'<?php 
 	
 		echo uploadHelper::route($self.(strpos($self, '?') === false ? '?' : '&').$f_.'&r='.urlencode(addslashes(uploadHelper::encrypt($file[0]['path'])))); 
-	?>\'}); return false">Remove</a>');
+	?>\'}); return false">Cancel</a>');
  
 	transfer.fireEvent('success', arg).fireEvent('complete', transfer)
 	</script>

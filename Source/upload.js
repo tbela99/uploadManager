@@ -7,7 +7,7 @@ copyright: Copyright (c) 2006 - 2010 Thierry Bela
 authors: [Thierry Bela]
 
 requires: 
-  core:1.2.4: 
+  core:1.3: 
   - Element.Event
   - Element.Style
   - Fx.Tween
@@ -77,7 +77,7 @@ String.implement({shorten: function (max, end) {
 
 			upload: function(options) {
 			
-				var opt = $merge({limit: 0}, options),
+				var opt = Object.merge({limit: 0}, options),
 					container = opt.container,
 					transfer;
 				
@@ -98,7 +98,7 @@ String.implement({shorten: function (max, end) {
 			
 				this.uploads[container].push(transfer);
 			
-				return transfer.fireEvent('create', opt.id)
+				return transfer.fireEvent('create', transfer)
 			},
 			
 			push: function(container, callback) {
@@ -258,7 +258,7 @@ String.implement({shorten: function (max, end) {
 								html: '<iframe id="' + options.id + '_iframe" src="' + options.base + ( options.base.indexOf('?') == -1 ? '?' : '&') + options.id + '" frameborder="no" scrolling="no" style="border:0;overflow:hidden;padding:0;display:block;float:left;height:20px;width:228px; "></iframe>'
 								+ '<input type="checkbox" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
 								+ '<input type="checkbox" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
-								+ '<span class="upload-span" id="' + options.id + '_label"><a class="cancel-upload" href="' + options.base + '">Remove</a></span>'
+								+ '<span class="upload-span" id="' + options.id + '_label"><a class="cancel-upload" href="' + options.base + '">Cancel</a></span>'
 							}).inject(options.container);
 					
 				return this.element
@@ -295,6 +295,12 @@ String.implement({shorten: function (max, end) {
 			initialize: function(options) {
 					
 				var xhr = this.xhr = new XMLHttpRequest();
+				
+				if(Browser.name == 'firefox' && Browser.version >= 4) this.addEvent('create', function (transfer) {
+				
+					var input = $(transfer).getElement('input[type=file]').setStyle('display', 'none');
+					new Element('a', {text: 'Browse...', 'class': 'browse-upload', href: '#', events: {click: function (e) { e.stop(); input.click() }}}).inject(input, 'before')
+				});
 				
 				this.addEvents({
 				
@@ -394,12 +400,12 @@ String.implement({shorten: function (max, end) {
 						+ '<input type="checkbox" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
 						+ '<input type="checkbox" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
 						+ '<label for="'+ options.id + '"></label>'
-						+ '</span></div><a class="cancel-upload" href="' + options.base + '">Remove</a>'
+						+ '</span></div><a class="cancel-upload" href="' + options.base + '">Cancel</a>'
 					}).inject(options.container);
 							
 				var input = this.element.getElement('input[type=file]').addEvent('change', function (e) {
 				
-					var files = $A(e.target.files);
+					var files = Array.from(e.target.files);
 					
 					this.load(files.shift());
 					files.each(function (f) { uploadManager.upload(options).load(f) })
@@ -435,7 +441,7 @@ String.implement({shorten: function (max, end) {
 				var first = this.element.getFirst(),
 					span = first.getElement('span').setStyle('display', 'none');
 				
-				this.progress = new ProgressBar($merge({
+				this.progress = new ProgressBar(Object.merge({
 					
 							container: first.set('title', file.name),
 							text: file.name.shorten()
@@ -476,6 +482,6 @@ String.implement({shorten: function (max, end) {
 			}
 		});
 		
-		$extend(Element.NativeEvents, {dragenter: 2, dragexit: 2, dragover: 2, drop: 2})
+		Object.extend(Element.NativeEvents, {dragenter: 2, dragexit: 2, dragover: 2, drop: 2})
 	
 })(document.id);

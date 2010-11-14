@@ -3,10 +3,10 @@
 		
 		format: function(kSep, floatsep, decimals, fill) {
 		
-			decimals = $pick(decimals, 2);
-			floatsep = $pick(floatsep, '.');
-			kSep = $pick(kSep, ' ');
-			fill = $pick(fill, '');
+			decimals = decimals == undefined ? 2 : decimals;
+			floatsep = floatsep == undefined ? '.' : floatsep;
+			kSep = kSep == undefined ? ' ' : undefined;
+			fill = fill == undefined ? '' : fill;
 
 			var parts = this.round(decimals).toString().split('.'),
 			integer = parts[0];

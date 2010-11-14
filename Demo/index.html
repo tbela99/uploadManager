@@ -23,17 +23,11 @@ window.addEvent('domready', function() {
 		
 			container: 'upload',
 			base: '../php/upload.php',
-			//filetype: 'html,rar,zip',
 			name: 'files[]',
-			multiple: true,
+			multiple: true, //enable multiple selection in file dialog
 			progressbar: {
 
-				/*
-				
-					fix the progressbar width
-				*/
-				
-				width: 140,
+				width: 140, //fix the progressbar width
 				color: '#000', 
 				fillColor: '#fff',
 				text: 'Pending...',
@@ -66,7 +60,7 @@ window.addEvent('domready', function() {
 		},
 		fn = function () { uploadManager.enqueue = this.checked };
 	
-	$('queue').addEvents({click: fn, change: fn});
+	uploadManager.enqueue = $('queue').addEvents({click: fn, change: fn}).checked;
 	
 	//enable file drag drop
 	uploadManager.attachDragEvents('upload', options);
