@@ -482,6 +482,6 @@ String.implement({shorten: function (max, end) {
 			}
 		});
 		
-		Object.extend(Element.NativeEvents, {dragenter: 2, dragexit: 2, dragover: 2, drop: 2})
+		Object.append(Element.NativeEvents, {dragenter: 2, dragexit: 2, dragover: 2, drop: 2})
 	
 })(document.id);
