@@ -1,14 +1,7 @@
 uploadManager
 ============
 
-mootools 1.3 ajax file upload with:
-
-- file drag drop (currently supported by chrome5+ and firefox 3.6+)
-- progress bar for browsers that support HTML5 File API (chrome5+, safari4+, Firefox 3.6+)
-- no input file for Firefox 4
-- iframe for the others
-- customizable by css (fully customizable in firefox 4 and later)
-- easy to use
+mootools 1.3 ajax file upload
 
 [Demo](http://tbela.fragged.org/demos/upload/Demo/)
 ![Screenshot](http://github.com/tbela99/uploadManager/raw/master/screenshot.png)
@@ -22,7 +15,15 @@ for a detailed usage see HOWTO.md in the Docs folder.
 
 # uploadManager
 
-creates and manage uploads
+creates and manage uploads with the following features:
+
+- file drag drop (currently supported by chrome5+ and firefox 3.6+)
+- progress bar for browsers that support HTML5 File API (chrome5+, safari4+, Firefox 3.6+)
+- no input file for Firefox 4
+- iframe for the others
+- customizable by css (fully customizable in firefox 4 and later)
+- easy to use
+
 
 ### uploadManager Property: xmlhttpupload
 
