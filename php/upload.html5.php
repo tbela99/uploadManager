@@ -11,7 +11,7 @@
 	
 	if($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-		$filename = uploadHelper::create_filename(basename($headers['Filename']), TEMP_PATH);
+		$filename = uploadHelper::create_filename(basename($headers['Filename']).'.tmp', TEMP_PATH);
 		$path = uploadHelper::encrypt($filename);
 		
 		file_put_contents($filename, file_get_contents('php://input'));

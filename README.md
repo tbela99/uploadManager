@@ -7,6 +7,8 @@ mootools 1.3 ajax file upload with:
 - progress bar for browsers that support HTML5 File API (chrome5+, safari4+, Firefox 3.6+)
 - no input file for Firefox 4
 - iframe for the others
+- customizable by css (fully customizable in firefox 4 and later)
+- easy to use
 
 [Demo](http://tbela.fragged.org/demos/upload/Demo/)
 ![Screenshot](http://github.com/tbela99/uploadManager/raw/master/screenshot.png)
@@ -15,7 +17,8 @@ mootools 1.3 ajax file upload with:
 How to use
 ---------------------
 
-see the Demo folder. you will need a webserver with php installed to run the demo.
+uploadManager uploads files in a temparay folder of your webserser and pull back the uploaded file name and its path in the form so you can send them along with the rest of the form
+you will need a webserver with php installed to run the demo.
 
 # uploadManager
 
