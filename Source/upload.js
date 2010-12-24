@@ -174,10 +174,15 @@ String.implement({shorten: function (max, end) {
 			
 				e.stop();
 				
-				var el = this, options = el.retrieve(store);
+				var el = this, options = el.retrieve(store),
+					transfer;
 				
 				el.getFirst().style.display = 'none';
-				if(e.event.dataTransfer) Array.from(e.event.dataTransfer.files).each(function (f) { uploadManager.upload(options).load(f) })
+				if(e.event.dataTransfer) Array.from(e.event.dataTransfer.files).each(function (f) { 
+				
+					transfer = uploadManager.upload(options);
+					if(transfer) transfer.load(f) 
+				})
 			}
 		},
 		
