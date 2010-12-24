@@ -372,7 +372,8 @@ String.implement({shorten: function (max, end) {
 					add(xhr, 'load', function() {
 
 						var progress = $(this.progress.setValue(1)),
-							self = this;
+							self = this,
+							options = this.options;
 								
 						(function () {
 						
@@ -406,7 +407,22 @@ String.implement({shorten: function (max, end) {
 							catch(e) { event = 'failure' }
 							
 						} else event = 'failure';
+						
+						if(json.size == 0) {
+							this.message = 'The selected file is empty';
+							event = 'failure';
 							
+						} else if(options.filesize > 0 && json.size > options.filesize) {
+							
+							this.message = 'file too big (file size must not exceed ' + options.filesize.toFileSize() + ')';
+							event = failure;
+						
+						} else if(options.maxsize > 0 && uploadManager.getSize(options.container) + json.size > options.maxsize) {
+						
+							this.message = 'file too big (total files size must not exceed ' + options.maxsize.toFileSize() + ')';
+							event = 'failure';
+						}
+	
 						this.fireEvent(event, event == 'failure' ? this : json).fireEvent('complete', this)	
 					}).
 					add(xhr, 'error', function() {
