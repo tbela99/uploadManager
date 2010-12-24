@@ -412,7 +412,7 @@ String.implement({shorten: function (max, end) {
 
 						if(json.size == 0) this.cancel('The selected file is empty');
 						else if(options.filesize > 0 && json.size > options.filesize) this.cancel('file too big (file size must not exceed ' + options.filesize.toFileSize() + ')');
-						else if(options.maxsize > 0 && uploadManager.getSize(options.container) + json.size > options.maxsize) this.cancel('file too big (total files size must not exceed ' + options.maxsize.toFileSize() + ')')						
+						else if(options.maxsize > 0 && uploadManager.getSize(options.container) > options.maxsize) this.cancel('file too big (total files size must not exceed ' + options.maxsize.toFileSize() + ')')						
 					}).
 					add(xhr, 'error', function() {
 
