@@ -3,9 +3,12 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>File Upload</title>
-<style type="text/css">body {
+<style type="text/css">
+html { margin: 0 }
+body {
 
 	font-size: 90%;
+	margin: 0 10px;
 }
 
 #upload {
@@ -57,20 +60,56 @@ a {
 
 	background: #aaa;
 	color: #fff;
-}</style>
-<script type="text/javascript" src="../mootools-core.js"></script>
-<script type="text/javascript" src="../number.js"></script>
-<script type="text/javascript" src="../Source/progressbar.js"></script>
-<script type="text/javascript" src="../Source/upload.js"></script>
+}
+
+.message {
+
+	border: 1px solid #000;
+	background: #ccc;
+	font-size: 90%;
+	padding: 10px;
+	display: inline-block;
+	margin: 10px 0;
+}
+
+.upload-link {
+
+	margin-top: 10px;
+}
+</style>
+<script type="text/javascript" src="mootools-core.js"></script>
+<script type="text/javascript" src="number.js"></script>
+<script type="text/javascript" src="PeriodicalExecuter.js"></script>
+<script type="text/javascript" src="progressbar.js"></script>
+<script type="text/javascript" src="upload.js"></script>
 <script type="text/javascript">
 
 window.addEvent('domready', function() {
 
 	var options = {
-		
-			base: '../php/upload.php',
+			/*
+				upload restrictions
+			*/
+			
+			//you cannot upload more than 3 files
+			limit: 3,
+			
+			//each file size must be less than 2.5Mb
+			filesize: 2621440,
+			
+			//total files size must not exceed 3.5Mb
+			maxsize: 3670016,
+			
+			//use iframe
+			iframe: false,
+			
+			//upload container id
 			container: 'upload',
+			
+			//filter uploaded file type
 			//filetype: 'html,rar,zip',
+			
+			//upload field name
 			name: 'alias',
 			//limit: 2, /* limit to two downloads */
 			multiple: true, //enable multiple selection in file dialog
@@ -95,12 +134,14 @@ window.addEvent('domready', function() {
 		*/
 			onAbort: function (object) {
 			
-				alert(object.message)
+				alert('Upload aborted:\n' + object.message)
 			},
-			onCancel: function () {
+			onCancel: function (obj) {
 			
 				//upload size
 				$('infos').set('html', uploadManager.getSize('upload').toFileSize());
+				if(obj.message) alert('Upload cancelled:\n' + obj.message)
+				
 			},
 			onSuccess: function (infos) {
 							
@@ -108,7 +149,7 @@ window.addEvent('domready', function() {
 				$('infos').set('html', uploadManager.getSize('upload').toFileSize());
 				//console.log(infos.file);
 				//download link
-				new Element('span', {html: '<a href="../php/upload.php?' + infos.path + '&dl=1&filename=' + infos.file + '">download</a> -&nbsp;'}).inject($(infos.transfer).getElement('a'), 'before')
+				new Element('span', {html: '<a href="upload.php?' + infos.path + '&dl=1&filename=' + infos.file + '">download</a> -&nbsp;'}).inject($(infos.transfer).getElement('a'), 'before')
 			},
 			onAllComplete: function (container) {
 			
@@ -118,10 +159,23 @@ window.addEvent('domready', function() {
 				else alert(message);
 			}
 		},
-		fn = function () { uploadManager.enqueue = this.checked };
+		fn = function () { uploadManager.enqueue = this.checked },
+		fr = function () { options.iframe = this.checked },
+		mu,
+		dd = document.getElement('label[for=dd]');
+	
+	if(uploadManager.multiple) {
+	
+		mu = function () { options.multiple = this.checked };
+		$('multiple').addEvents({click: mu, change: mu}).disabled = false;
+	}
+	
+	dd.set('text', dd.get('text') + (window.DataTransfer ? ' (Yes!)' : ' ... don\'t know :('));
+	dd.getPrevious().disabled = true;
 	
 	//enable/disable queue
 	uploadManager.enqueue = $('queue').addEvents({click: fn, change: fn}).checked;
+	uploadManager.iframe = $('iframe').set({events: {click: fr, change: fr}, disabled: !uploadManager.xmlhttpupload, checked: !uploadManager.xmlhttpupload }).checked;
 	
 	uploadManager.attachDragEvents('upload', options);
 	
@@ -134,7 +188,16 @@ window.addEvent('domready', function() {
 </script>
 </head>
 
-<body><form action="" method="get"><a href="#">Upload a file</a> [upload size: <span id="infos">0</span>]<br/><input type="checkbox" id="queue"/> <label for="queue">Upload queue</label>
+<body><form action="" method="get">
+<span class="message">
+You can upload up to 3 files.
+<br/>each file must not exceed 2.5Mb.
+<br/>total files size must not exceed 3.5Mb.</span>
+<br/><input type="checkbox" id="queue"/> <label for="queue">Upload queue</label>
+<br/><input type="checkbox" id="iframe" disabled="disabled"/> <label for="iframe">Use Iframe</label>
+<br/><input type="checkbox" id="multiple" disabled="disabled"/> <label for="multiple">Enable multiple files selection</label>
+<br/><input type="checkbox" id="dd" disabled="disabled"/> <label for="dd">Use file drag drop</label>
+<div class="upload-link"><a href="#">Upload a file</a> [upload size: <span id="infos">0</span>]</div>
 <div id="upload"></div></form>
 </body>
 </html>

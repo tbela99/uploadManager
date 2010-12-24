@@ -21,6 +21,10 @@
 	if(!defined('TEMP_PATH'))
 		define('TEMP_PATH', BASE_PATH.DS.'tmp');
 
+	//upload max size in bytes
+	if(!defined('UPLOAD_MAX_SIZE'))
+		define('UPLOAD_MAX_SIZE', 0); //2621440 2.5M
+
 	require dirname(__FILE__).DS.'uploadhelper.php';
 
 	if (!function_exists('apache_request_headers'))  {

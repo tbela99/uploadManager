@@ -32,12 +32,15 @@ String.implement({shorten: function (max, end) {
 	var store = 'umo',
 		transport = 'upl:tr',
 		window = this,
-		html5 = !!new Element('input', {type: 'file'}).files,
+		div = new Element('input', {type: 'file'}),
 		
 		uploadManager = this.uploadManager = {
 			
-			/* iframe or xmlhttp is used */
-			xmlhttpupload: html5,
+			/* xmlhttp can be used */
+			xmlhttpupload: !!div.files,
+			
+			/* can handle multiple files upload */
+			multiple: 'multiple' in div,
 						
 			//upload hash
 			uploads: {},
@@ -77,7 +80,7 @@ String.implement({shorten: function (max, end) {
 
 			upload: function(options) {
 			
-				var opt = Object.merge({limit: 0}, options),
+				var opt = Object.merge({limit: 0, filesize: 0, maxsize: 0/*, iframe: false */}, options),
 					container = opt.container,
 					transfer;
 				
@@ -94,7 +97,7 @@ String.implement({shorten: function (max, end) {
 				opt.base = opt.base || 'upload.php';
 				opt.id =  opt.name.replace(/[^a-z0-9]/gi, '') + new Date().getTime();
 				
-				transfer = html5 ? new HTML5Transfert(opt) : new Transfert(opt);
+				transfer = !opt.iframe && this.xmlhttpupload ? new HTML5Transfert(opt) : new Transfert(opt);
 			
 				this.uploads[container].push(transfer);
 			
@@ -136,7 +139,7 @@ String.implement({shorten: function (max, end) {
 			},
 
 			//return a copy of the internal list
-			getTransfers: function (container) { return (this.uploads[container] || []).map(function (t) { return t }) }
+			getTransfers: function (container) { return (this.uploads[container] || []).clone() }
 		},
 		dragdrop = {
 					
@@ -201,7 +204,7 @@ String.implement({shorten: function (max, end) {
 						load: function () { uploadManager.actives[container].push(this) },
 						
 						success: function (json) {
-							
+								
 							this.filesize = json.size;
 							this.complete = true;
 							uploadManager.actives[container].erase(this)
@@ -271,15 +274,19 @@ String.implement({shorten: function (max, end) {
 				this.aborted = false;
 				this.fireEvent('load', {element: this.element, file: file, size: 0, transfer: this});
 				if(this.aborted) this.fireEvent('abort', {file: file, message: this.message || '', transfer: this});
+				delete this.message;
 				return this;
 			},
 			
-			cancel: function () {
+			cancel: function (message) {
 			
 				var complete = this.running;
 				
+				if(message) this.message = message;
+				
 				this.fireEvent('cancel', this);
 				if(complete) this.fireEvent('complete', this);
+				delete this.message;
 				this.element.destroy()
 			},
 			
@@ -304,6 +311,30 @@ String.implement({shorten: function (max, end) {
 				
 				this.addEvents({
 				
+					load: function (obj) {
+					
+						//file size limit check
+						if(obj.size == 0) {
+						
+							this.message = 'The selected file is empty';
+							this.aborted = true
+						}
+						
+						//file size limit check
+						else if(options.filesize > 0 && obj.size > options.filesize) {
+						
+							this.aborted = true;
+							this.message = 'file too big (file size must not exceed ' + options.filesize.toFileSize() + ')'
+						}
+						
+						//console.log([options.maxsize, uploadManager.getSize(options.container) + obj.size])
+						else if(options.maxsize > 0 && uploadManager.getSize(options.container) + obj.size > options.maxsize) {
+						
+							this.aborted = true;
+							this.message = 'file too big (total file size must not exceed ' + options.maxsize.toFileSize() + ')'
+						}
+					},
+					
 					success: function (json) { 
 					
 						var remove = json.remove;
@@ -342,7 +373,7 @@ String.implement({shorten: function (max, end) {
 						(function () {
 						
 							progress.style.display = 'none';
-							self.fields.getElement('label').set({text: (self.filename + ' (' + self.size.toFileSize() + ')').shorten(), title: self.filename});
+							self.fields.getElement('label').set({text: self.filename.shorten() + ' (' + self.size.toFileSize() + ')', title: self.filename});
 							self.fields.style.display = '';
 							(function () { progress.destroy() }).delay(50)
 						}).delay(10);
@@ -405,10 +436,17 @@ String.implement({shorten: function (max, end) {
 							
 				var input = this.element.getElement('input[type=file]').addEvent('change', function (e) {
 				
-					var files = Array.from(e.target.files);
+					var files = Array.from(e.target.files),
+						transfer;
 					
 					this.load(files.shift());
-					files.each(function (f) { uploadManager.upload(options).load(f) })
+					files.each(function (f) { 
+						
+						transfer = uploadManager.upload(options);
+						//if there is no restriction
+						if(transfer) transfer.load(f) 
+					})
+					
 				}.pass(null, this));
 								
 				return this.addEvent('abort', function () { input.value = '' }).element
@@ -430,6 +468,7 @@ String.implement({shorten: function (max, end) {
 				if(this.aborted) {
 				
 					this.fireEvent('abort', {file: file, message: this.message || '', transfer: this});
+					delete this.message;
 					this.cancel();
 					return this
 				}
@@ -482,6 +521,6 @@ String.implement({shorten: function (max, end) {
 			}
 		});
 		
-		Object.append(Element.NativeEvents, {dragenter: 2, dragexit: 2, dragover: 2, drop: 2})
-	
+		Object.append(Element.NativeEvents, {dragenter: 2, dragexit: 2, dragover: 2, drop: 2});
+		div.destroy()	
 })(document.id);

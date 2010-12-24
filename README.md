@@ -11,14 +11,14 @@ How to use
 
 uploadManager uploads files in a temporary folder of your webserser and pull back the uploaded file name and its path in the form, so you can send them along with the rest of the form.
 you will need a webserver with php installed to run the demo. 
-for a detailed usage see HOWTO.md in the Docs folder.
+for a detailed usage see [HOWTO.md](http://github.com/tbela99/uploadManager/Docs/HOWTO.md) in the Docs folder.
 
 # uploadManager
 
 creates and manage uploads with the following features:
 
 - file drag drop (currently supported by chrome5+ and firefox 3.6+)
-- progress bar for browsers that support HTML5 File API (chrome5+, safari4+, Firefox 3.6+)
+- progress bar for browsers supporting HTML5 File API (chrome5+, safari4+, Firefox 3.6+)
 - no input file for Firefox 4
 - iframe for the others
 - customizable by css (fully customizable in firefox 4 and later)
@@ -32,6 +32,10 @@ creates and manage uploads with the following features:
 ### uploadManager Property: enqueue
 
 (*boolean*) queue upload. by default upload are not queued.
+
+### uploadManager Property: multiple
+
+(*boolean*) indicates if the browser can handle multiple files selection.
 
 ### uploadManager Method: upload {#uploadManager:upload}
 ------------
@@ -50,7 +54,10 @@ create a new upload field.
 
 - container - (*string*) upload container id.
 - base - (*string*, optional) url of the page that will handle server side file upload. default to *upload.php*.
-- limit - (*int*, optional) maximum number of file the user should upload. 0 means no limit. default to 0.
+- limit - (*int*, optional) maximum number of files the user can upload. 0 means no restriction. default to 0.
+- filesize - (*int*, optional) maximum size of a file the user can upload. 0 means no restriction. default to 0.
+- maxsize - (*int*, optional) maximum size of files uploaded by a user. 0 means no restriction. default to 0.
+- iframe - (*boolean*, optional) force iframe upload.
 - multiple - (*boolean*, optional) enable multiple file selection for the input if the browser can handle it.
 - filetype - (*string*, optional) authorized file type.
 - name - (*string*) name of the upload form field. it contains the original name of the file sent by the user. if the upload succeed a hidden field named *'file_' + name* and containing the encrypted file path on the server will be pushed into the form.
@@ -123,6 +130,10 @@ Fired when the transfer is aborted (it has not started).
 - transfer - (*object*) file upload instance.
 
 ##### onCancel
+
+##### Options:
+
+- message - (*string*, optional) error message
 
 Fired when the transfer is cancelled.
 

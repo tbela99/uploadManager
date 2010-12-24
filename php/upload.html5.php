@@ -24,12 +24,17 @@
   		
 		$url .= '?';
 		
-		header('Content-Type: application/x-json');
-		echo json_encode(array('file' => basename($headers['Filename']), 'path' => $path, 'size' => $size, 'remove' => $url.'r='.urlencode($path)));
-	
+		//file size check
+		if(UPLOAD_MAX_SIZE > 0 && $size > UPLOAD_MAX_SIZE)
+			$size = 0;
+			
 		if($size == 0)
 			unlink($filename);
 		
+		
+		header('Content-Type: application/x-json');
+		echo json_encode(array('file' => basename($headers['Filename']), 'path' => $path, 'size' => $size, 'remove' => $url.'r='.urlencode($path)));
+	
 		//remove file
 	} else if($file = uploadHelper::getVar('r')) {
 			
