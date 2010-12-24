@@ -11,7 +11,7 @@ How to use
 
 uploadManager uploads files in a temporary folder of your webserser and pull back the uploaded file name and its path in the form, so you can send them along with the rest of the form.
 you will need a webserver with php installed to run the demo. 
-for a detailed usage see [HOWTO.md](http://github.com/tbela99/uploadManager/Docs/HOWTO.md) in the Docs folder.
+for a detailed usage see [HOWTO.md](https://github.com/tbela99/uploadManager/blob/master/Docs/HOWTO.md) in the Docs folder.
 
 # uploadManager
 
