@@ -27,11 +27,10 @@ String.implement({shorten: function (max, end) {
 	}
 });
 	
-(function ($) {
+(function ($, window) {
 
 	var store = 'umo',
 		transport = 'upl:tr',
-		window = this,
 		div = new Element('input', {type: 'file'}),
 		
 		uploadManager = this.uploadManager = {
@@ -523,4 +522,4 @@ String.implement({shorten: function (max, end) {
 		
 		Object.append(Element.NativeEvents, {dragenter: 2, dragexit: 2, dragover: 2, drop: 2});
 		div.destroy()	
-})(document.id);
+})(document.id, this);
