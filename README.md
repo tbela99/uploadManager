@@ -7,7 +7,7 @@ mootools 1.3 ajax file upload
 ![Screenshot](http://github.com/tbela99/uploadManager/raw/master/screenshot.png)
 
 How to use
----------------------
+----------
 
 uploadManager uploads files in a temporary folder of your webserser and pull back the uploaded file name and its path in the form, so you can send them along with the rest of the form.
 you will need a webserver with php installed to run the demo. 
