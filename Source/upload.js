@@ -94,7 +94,7 @@ String.implement({shorten: function (max, end) {
 				
 				//where to send the uploaded file
 				opt.base = opt.base || 'upload.php';
-				opt.id =  opt.name.replace(/[^a-z0-9]/gi, '') + new Date().getTime();
+				opt.id =  opt.name.replace(/[^a-z0-9]/gi, '') + +new Date();
 				
 				transfer = !opt.iframe && this.xmlhttpupload ? new HTML5Transfert(opt) : new Transfert(opt);
 			
@@ -138,7 +138,7 @@ String.implement({shorten: function (max, end) {
 			},
 
 			//return a copy of the internal list
-			getTransfers: function (container) { return (this.uploads[container] || []).clone() }
+			getTransfers: function (container) { return (this.uploads[container] || []).concat() }
 		},
 		dragdrop = {
 					
@@ -256,7 +256,7 @@ String.implement({shorten: function (max, end) {
 						
 					e.stop(); 
 					this.cancel() 
-				}.pass(null, this))
+				}.bind(this))
 			},
 			
 			createElement: function (options) {
@@ -331,7 +331,6 @@ String.implement({shorten: function (max, end) {
 							this.message = 'file too big (file size must not exceed ' + options.filesize.toFileSize() + ')'
 						}
 						
-						//console.log([options.maxsize, uploadManager.getSize(options.container) + obj.size])
 						else if(options.maxsize > 0 && uploadManager.getSize(options.container) + obj.size > options.maxsize) {
 						
 							this.aborted = true;
@@ -417,9 +416,9 @@ String.implement({shorten: function (max, end) {
 					add(xhr, 'error', function() {
 
 								this.span.style.display = 'none';
-								this.fields.getElement('label').set('text', this.filename + '(Failed)');
+								this.fields.getElement('label').set('text', this.filename + '(Failed)')
 							
-							}.pass(null, this));
+							}.bind(this));
 							
 				if(this.reader) {
 				
@@ -452,18 +451,17 @@ String.implement({shorten: function (max, end) {
 					files.each(function (f) { 
 						
 						transfer = uploadManager.upload(options);
-						//if there is no restriction
 						if(transfer) transfer.load(f) 
 					})
 					
-				}.pass(null, this));
+				}.bind(this));
 								
 				return this.addEvent('abort', function () { input.value = '' }).element
 			},
 			
 			add: function (obj, event, fn) {
 			
-				fn = fn.pass(null, this);
+				fn = fn.bind(this);
 				if(obj.addEventListener) obj.addEventListener(event, fn, false);
 				else obj['on' + event] = fn;
 				return this
@@ -500,7 +498,7 @@ String.implement({shorten: function (max, end) {
 				this.element.getElement('input[type=file]').destroy();	
 				
 				span.destroy();
-				uploadManager.push(this.options.container, this.upload.pass(null, this));
+				uploadManager.push(this.options.container, this.upload.bind(this));
 				if(this.reader) this.reader.readAsBinaryString(file);
 				return this
 			},
@@ -525,7 +523,7 @@ String.implement({shorten: function (max, end) {
 				if(this.reader) {
 				
 					if(this.ready) this.initUpload();
-					else setTimeout(this.upload.pass(null, this), 100)
+					else setTimeout(this.upload.bind(this), 100)
 				} else this.initUpload()
 			}
 		});
