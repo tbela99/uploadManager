@@ -107,7 +107,7 @@ you should also change the methods *uploadHelper::encrypt()* and *uploadHelper::
 					//console.log(arguments)
 					progressbar.setText('completed: ' + (100 * value).format() + '%')
 				}
-			},
+			}
 		};
 	
 	//enable file drag drop on $('upload')

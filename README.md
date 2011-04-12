@@ -17,6 +17,7 @@ for a detailed usage see [HOWTO.md](https://github.com/tbela99/uploadManager/blo
 
 creates and manage uploads with the following features:
 
+- resume upload on error/pause (Google Chrome, Firefox 3.6+)
 - file drag drop (currently supported by chrome 5+, safari 5.0.3+ and firefox 3.6+)
 - progress bar for browsers supporting HTML5 File API (chrome5+, safari4+, Firefox 3.6+)
 - no input file for Firefox 4
@@ -24,6 +25,10 @@ creates and manage uploads with the following features:
 - customizable by css (fully customizable in firefox 4 and later)
 - easy to use
 
+
+### uploadManager Property: resume
+
+(*boolean*) indicates if the browser can resume upload after error or pause.
 
 ### uploadManager Property: xmlhttpupload
 
@@ -53,6 +58,8 @@ create a new upload field.
 ##### Options:
 
 - container - (*string*) upload container id.
+- pause - (*boolean*) allow user to pause/resume upload (if the browser can resume broken upload) otherwise the resume button will only appear when an error occur. default to false.
+- chunckSize - (*int*) chunk file size. default to 1Mb. if the browser can resume broken file upload, file will be split in pieces of a maximum length of chunckSize.
 - base - (*string*, optional) url of the page that will handle server side file upload. default to *upload.php*.
 - limit - (*int*, optional) maximum number of files the user can upload. 0 means no restriction. default to 0.
 - filesize - (*int*, optional) maximum size of a file the user can upload. 0 means no restriction. default to 0.
@@ -233,7 +240,6 @@ return uploaded file size for a given container.
 #### Arguments:
 
 1. container - (*string*) container id
-2. convert - (*boolean*) convert the result
 
 return all the file upload instance of a given container.
 

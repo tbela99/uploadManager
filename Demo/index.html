@@ -27,7 +27,7 @@ a {
 
 	cancel upload button
 */
-.cancel-upload {
+.pause-upload, .cancel-upload, .browse-upload, .resume-upload  {
 
 	background:#ccc;
 	border: 1px solid #999999;
@@ -36,7 +36,7 @@ a {
 	margin: 5px 5px 0 3px;
 	padding: 2px 5px;
 }
-.cancel-upload:hover {
+.pause-upload:hover, .cancel-upload:hover, .pause-upload:hover, .resume-upload:hover {
 
 	background: #aaa;
 	color: #fff;
@@ -95,6 +95,9 @@ window.addEvent('domready', function() {
 			
 			//you cannot upload more than 3 files
 			limit: 3,
+			
+			//show the pause/resume upload by default if the browser can handle that otherwise show only on error
+			pause: true,
 			
 			//each file size must be less than 2.5Mb
 			filesize: 2621440,
@@ -178,6 +181,7 @@ window.addEvent('domready', function() {
 	//enable/disable queue
 	uploadManager.enqueue = $('queue').addEvents({click: fn, change: fn}).checked;
 	uploadManager.iframe = $('iframe').set({events: {click: fr, change: fr}, disabled: !uploadManager.xmlhttpupload, checked: !uploadManager.xmlhttpupload }).checked;
+	$('pa').checked = uploadManager.resume;
 	
 	uploadManager.attachDragEvents('upload', options);
 	
@@ -199,6 +203,7 @@ You can upload up to 3 files.
 <br/><input type="checkbox" id="iframe" disabled="disabled"/> <label for="iframe">Use Iframe</label>
 <br/><input type="checkbox" id="multiple" disabled="disabled"/> <label for="multiple">Enable multiple files selection</label>
 <br/><input type="checkbox" id="dd" disabled="disabled"/> <label for="dd">Use file drag drop</label>
+<br/><input type="checkbox" id="pa" readonly="readonly" disabled="disabled"/> <label>Pause/Resume on error</label>
 <div class="upload-link"><a href="#">Upload a file</a> [upload size: <span id="infos">0</span>]</div>
 <div id="upload"></div></form>
 </body>
