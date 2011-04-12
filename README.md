@@ -18,7 +18,7 @@ for a detailed usage see [HOWTO.md](https://github.com/tbela99/uploadManager/blo
 creates and manage uploads with the following features:
 
 - resume upload on error/pause (Google Chrome, Firefox 3.6+)
-- file drag drop (currently supported by chrome 5+, safari 5.0.3+ and firefox 3.6+)
+- file drag drop (currently supported by chrome 5+ and firefox 3.6+)
 - progress bar for browsers supporting HTML5 File API (chrome5+, safari4+, Firefox 3.6+)
 - no input file for Firefox 4
 - iframe for the others
