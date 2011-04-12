@@ -36,7 +36,7 @@ String.implement({shorten: function (max, end) {
 		uploadManager = this.uploadManager = {
 			
 			/* xmlhttp can be used */
-			xmlhttpupload: !!div.files,
+			xmlhttpupload: !!div.files && window.XMLHttpRequest && 'upload' in XMLHttpRequest.prototype,
 			
 			/* can handle multiple files upload */
 			multiple: 'multiple' in div,
