@@ -16,6 +16,11 @@ requires:
 provides: [uploadManager]
 ...
 */
+/*
+
+	Todo: pass the file to the constructor for xmlhttpupload
+	Todo: change the behavior to show file selection dialog when the upload is created and no file specified for ff4
+*/
 
 String.implement({shorten: function (max, end) {
 
@@ -40,8 +45,8 @@ String.implement({shorten: function (max, end) {
 			
 			/* can handle multiple files upload */
 			multiple: 'multiple' in div,
-			
-			resume: window.File && 'slice' in File.prototype,
+			//FF 4.01, chrome 11
+			resume: window.File && ('slice' in File.prototype || 'mozSlice' in File.prototype || 'webkitSlice' in File.prototype),
 						
 			//upload hash
 			uploads: {},
@@ -184,7 +189,7 @@ String.implement({shorten: function (max, end) {
 				el.getFirst().style.display = 'none';
 				if(e.event.dataTransfer) Array.from(e.event.dataTransfer.files).each(function (f) { 
 				
-					transfer = uploadManager.upload(options);
+					transfer = uploadManager.upload({hideDialog: true}, options);
 					if(transfer) transfer.load(f) 
 				})
 			}
@@ -328,16 +333,7 @@ String.implement({shorten: function (max, end) {
 					}
 				}
 			},
-			init: function () {
 			
-				if(Browser.name == 'firefox' && Browser.version >= 4) this.addEvent('create', function (transfer) {
-				
-					var input = $(transfer).getElement('input[type=file]').setStyle('display', 'none');
-					new Element('a', {text: 'Browse...', 'class': 'browse-upload', href: '#', events: {click: function (e) { e.stop(); input.click() }}}).inject(input, 'before')
-				});
-				
-				return this
-			},
 			add: function (obj, event, fn) {
 			
 				fn = fn.bind(this);
@@ -391,7 +387,7 @@ String.implement({shorten: function (max, end) {
 			reader: !!window.FileReader,
 			initialize: function(options) {
 					
-				this.init().addEvents(this.events).addEvents({
+				this.addEvents(this.events).addEvents({
 				
 					success: function (json) { 
 					
@@ -571,8 +567,8 @@ String.implement({shorten: function (max, end) {
 				chunckSize: 1048576	//1Mb
 			},
 			initialize: function(options) {
-					
-				this.init().addEvents(this.events).addEvents({
+				
+				this.addEvents(this.events).addEvents({
 				
 					cancel: function () { 
 					
@@ -635,7 +631,13 @@ String.implement({shorten: function (max, end) {
 					else this.resume()
 					
 				}.bind(this));
-								
+							
+				if(Browser.name == 'firefox' && Browser.version >= 4) {
+				
+					new Element('a', {text: 'Browse...', 'class': 'browse-upload', href: '#', events: {click: function (e) { e.stop(); input.click() }}}).inject(input.setStyle('display', 'none'), 'before');
+					if(!this.options.hideDialog) input.click.delay(10, input)
+				}
+						
 				return this.addEvent('abort', function () { input.value = '' }).element
 			},
 			
@@ -655,7 +657,11 @@ String.implement({shorten: function (max, end) {
 			
 				if(this.xhr) return this;
 								
-				var xhr = this.xhr = new XMLHttpRequest();
+				var xhr = this.xhr = new XMLHttpRequest(), 
+					method = 'slice',
+					offset = this.options.chunckSize,
+					//browser version, mootools truncate this value and firefox 4.0.1 is reported as firefox 4. this is bad
+					version = navigator.userAgent.replace(/.*?(Version\/(\S+)|Chrome\/(\S+)|MSIE ([^;\s]+)|Firefox\/(\S+)|Opera Mini\/([^\d.]+)).*?$/, '$2$3$4$5$6');
 			
 				this.add(xhr.upload, 'progress', function(e) { if (e.lengthComputable) this.progress.setValue((e.loaded + this.loaded) / this.size) }).						
 					add(xhr, 'error', this.pause).
@@ -745,7 +751,16 @@ String.implement({shorten: function (max, end) {
 				xhr.setRequestHeader('Guid', this.guid);
 					
 				if(this.loaded + this.options.chunckSize < this.size) xhr.setRequestHeader('Partial', 1);
-				xhr.send(this.file.size < this.options.chunckSize ? this.file : this.file.slice(this.loaded, this.options.chunckSize));			
+				
+				//do nothing
+				if((Browser.chrome && version < '11') || (Browser.firefox && version <= '4'));
+				else offset += this.loaded;
+				
+				if(this.file.mozSlice) method = 'mozSlice';
+				else if(this.file.webkitSlice) method = 'webkitSlice';
+				
+				xhr.send(this.file.size < this.options.chunckSize ? this.file : this.file[method](this.loaded, offset));
+				
 				return this
 			},
 			
