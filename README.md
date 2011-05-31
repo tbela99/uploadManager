@@ -70,6 +70,7 @@ create a new upload field.
 - name - (*string*) name of the upload form field. it contains the original name of the file sent by the user. if the upload succeed a hidden field named *'file_' + name* and containing the encrypted file path on the server will be pushed into the form.
 for example if our form field is named *name[]*, then *name[]* will contains the original file name and *file_name[]* will contains the encrypted file path on the server.
 - progressbar - (*object*, optional) progressbar options. see [Progressbar](http://github.com/tbela99/progressbar/)
+- hideDialog - (*boolean*, optional) Firefox 4+ only: if true the file selection dialog will not be shown after the upload instance is created.
 
 ##### Progressbar:
 

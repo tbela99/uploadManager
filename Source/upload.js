@@ -183,13 +183,13 @@ String.implement({shorten: function (max, end) {
 			
 				e.stop();
 				
-				var el = this, options = el.retrieve(store),
+				var el = this, options = Object.merge({hideDialog: true}, el.retrieve(store)),
 					transfer;
 				
 				el.getFirst().style.display = 'none';
 				if(e.event.dataTransfer) Array.from(e.event.dataTransfer.files).each(function (f) { 
 				
-					transfer = uploadManager.upload({hideDialog: true}, options);
+					transfer = uploadManager.upload(options);
 					if(transfer) transfer.load(f) 
 				})
 			}
