@@ -183,7 +183,7 @@ String.implement({shorten: function (max, end) {
 			
 				e.stop();
 				
-				var el = this, options = Object.merge({hideDialog: true}, el.retrieve(store)),
+				var el = this, options = Object.merge(el.retrieve(store), {hideDialog: true}),
 					transfer;
 				
 				el.getFirst().style.display = 'none';
