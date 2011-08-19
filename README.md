@@ -18,7 +18,7 @@ for a detailed usage see [HOWTO.md](https://github.com/tbela99/uploadManager/blo
 creates and manage uploads with the following features:
 
 - resume upload on error/pause (Google Chrome, Firefox 3.6+)
-- file drag drop (currently supported by chrome 5+ and firefox 3.6+)
+- file drag drop (currently supported by chrome 5+, firefox 3.6+ and safari 5.1+)
 - progress bar for browsers supporting HTML5 File API (chrome5+, safari4+, Firefox 3.6+)
 - no input file for Firefox 4
 - iframe for the others
@@ -244,6 +244,12 @@ return uploaded file size for a given container.
 
 return all the file upload instance of a given container.
 
+
+### uploadManager Method: getTransfers
+------------
+
+return the transfer instances for a given container.
+
 ### Returns:
 
 * (*array*)
@@ -266,3 +272,81 @@ Options, Events. see [uploadManager#upload](#uploadManager:upload) for implement
 ------------
 - completed - (*boolean*) true if the file has been succesfully uploaded
 - filesize - (*int*) the uploaded file size in byte.
+- state - (*int*) state of the transfer of this instance. value are: 0 (not started), 1 (loading), 2 (aborted), 3 (cancelled), 4 (completed)
+
+
+Example
+--------
+
+a simple form to upload a text file.
+
+### HTML:
+
+	<form action="" method="get">
+		<a href="#">Upload a picture of you:</a>
+		<div id="upload"></div>
+		<input type="submit" value="submit"/>
+	</form>
+	  
+### Javascript:
+
+	var options = {
+	
+		//upload only one file
+		limit: 1,
+		//upload in this element
+		container: 'upload',
+		//allowed file type
+		filetype: 'jpg,gif,png',
+		//transfer aborted
+		onAbort: function () {
+		
+			alert('Unauthorized file type, allowed file type are "' + this.options.filetype + '"')
+		},
+		onSuccess: function () { alert('Transfer completed succesfully!') }
+	};
+
+	window.addEvent('domready', function () {
+	
+		//add click listener on the link
+		document.id('upload').addEvent('click', function (e) {
+		
+			e.stop();
+			
+			//create upload field
+			uploadManager.upload(options)
+		}).
+		//check submit form
+		getParent('form').addEvent('submit', function (e) {
+		
+			e.stop();
+			
+			//transfer instances
+			var transfers = uploadManager.getTransfers('upload');
+			
+			//user have not uploaded a file
+			if(transfers.length == 0) {
+			
+				alert('Please select a file to upload');
+				return
+			}
+			
+			//check we have ungoing transfers
+			if(transfers.some(function (instance) { return instance.state == 1 })) {
+			
+				alert('there are some pending queries, please wait until it completes, the try again');
+				return
+			}
+			
+			//check all transfers have completed
+			if(!transfers.every(function (instance) { return instance.complete})) {
+			
+				alert('some tranfers may have failed. please try again');
+				return
+			}
+			
+			//all transfers have completed succesfully, submit the form
+			
+			//this.submit()			
+		})
+	})

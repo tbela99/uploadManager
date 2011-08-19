@@ -3,15 +3,27 @@ uploadManager
 
 mootools 1.3 ajax file upload with:
 
-- file drag drop (currently supported by chrome5+ and firefox 3.6+)
-- progress bar for browsers that support HTML5 File API (chrome5+, safari4+, Firefox 3.6+)
+[Demo](http://tbela.fragged.org/demos/upload/Demo/)
+![Screenshot](http://github.com/tbela99/uploadManager/raw/master/screenshot.png)
+
+How to use
+----------
+
+uploadManager uploads files in a temporary folder of your webserser and pull back the uploaded file name and its path in the form, so you can send them along with the rest of the form.
+you will need a webserver with php installed to run the demo. 
+for a detailed usage see [HOWTO.md](https://github.com/tbela99/uploadManager/blob/master/Docs/HOWTO.md) in the Docs folder.
+
+# uploadManager
+
+creates and manage uploads with the following features:
+
+- resume upload on error/pause (Google Chrome, Firefox 3.6+)
+- file drag drop (currently supported by chrome 5+, firefox 3.6+ and safari 5.1+)
+- progress bar for browsers supporting HTML5 File API (chrome5+, safari4+, Firefox 3.6+)
 - no input file for Firefox 4
 - iframe for the others
 - customizable by css (fully customizable in firefox 4 and later)
 - easy to use
-
-[Demo](http://tbela.fragged.org/demos/upload/Demo/)
-![Screenshot](http://github.com/tbela99/uploadManager/raw/master/screenshot.png)
 
 How does it work
 ---------------------

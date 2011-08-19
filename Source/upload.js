@@ -34,11 +34,12 @@ String.implement({shorten: function (max, end) {
 	
 (function ($, window) {
 
+"use strict";
 	var store = 'umo',
 		transport = 'upl:tr',
 		div = new Element('input', {type: 'file'}),
 		
-		uploadManager = this.uploadManager = {
+		uploadManager = window.uploadManager = {
 			
 			/* xmlhttp can be used */
 			xmlhttpupload: !!div.files && window.XMLHttpRequest && ('upload' in XMLHttpRequest.prototype || window.XMLHttpRequestUpload),
@@ -86,7 +87,7 @@ String.implement({shorten: function (max, end) {
 
 			upload: function(options) {
 			
-				var opt = Object.merge({limit: 0, filesize: 0, maxsize: 0/*, resume: false, iframe: false */}, options),
+				var opt = Object.append({limit: 0, filesize: 0, maxsize: 0/*, resume: false, iframe: false */}, options),
 					container = opt.container,
 					transfer;
 				
@@ -101,7 +102,7 @@ String.implement({shorten: function (max, end) {
 				
 				//where to send the uploaded file
 				opt.base = opt.base || 'upload.php';
-				opt.id =  opt.name.replace(/[^a-z0-9]/gi, '') + +new Date();
+				opt.id =  opt.name.replace(/[^a-z0-9]/gi, '') + (+new Date());
 				
 				if(opt.iframe || !this.xmlhttpupload) transfer = new Transfert(opt);
 				else if(this.resume) transfer = new HTML5MultipartTransfert(opt);
@@ -155,9 +156,7 @@ String.implement({shorten: function (max, end) {
 			
 				e.stop();
 				
-				var el = this;
-				
-				co = el.getCoordinates();
+				var el = this, co = el.getCoordinates();
 				
 				el.getFirst().setStyles({
 											left: co.left,
@@ -183,8 +182,7 @@ String.implement({shorten: function (max, end) {
 			
 				e.stop();
 				
-				var el = this, options = Object.merge(el.retrieve(store), {hideDialog: true}),
-					transfer;
+				var el = this, options = Object.append(el.retrieve(store), {hideDialog: true}), transfer;
 				
 				el.getFirst().style.display = 'none';
 				if(e.event.dataTransfer) Array.from(e.event.dataTransfer.files).each(function (f) { 
@@ -197,6 +195,7 @@ String.implement({shorten: function (max, end) {
 		
 		Transfert = new Class({
 		
+			state: 0,
 			filesize: 0,
 			complete: false,
 			initialize: function(options) {
@@ -214,9 +213,11 @@ String.implement({shorten: function (max, end) {
 					
 				this.addEvents({
 		
-						load: function () { uploadManager.actives[container].push(this) },
+						abort: function () { this.state = 2 },
+						load: function () { this.state = 1; uploadManager.actives[container].push(this) },
 						success: function (json) {
 								
+							this.state = 4;
 							this.filesize = json.size;
 							this.complete = true;
 							uploadManager.actives[container].erase(this)
@@ -238,6 +239,7 @@ String.implement({shorten: function (max, end) {
 						},
 						cancel: function () {  
 						
+							this.state = 3;
 							uploadManager.uploads[container].erase(this)
 							uploadManager.actives[container].erase(this)
 						},
@@ -362,7 +364,7 @@ String.implement({shorten: function (max, end) {
 				var first = this.element.getFirst(),
 					span = first.getElement('span').setStyle('display', 'none');
 				
-				this.progress = new ProgressBar(Object.merge({
+				this.progress = new ProgressBar(Object.append({
 					
 							container: first.set('title', file.name),
 							text: file.name.shorten()
@@ -379,7 +381,7 @@ String.implement({shorten: function (max, end) {
 			}
 		},
 		
-		HTML5Transfert = new Class(Object.merge({
+		HTML5Transfert = new Class(Object.append({
 		
 			Extends: Transfert,
 			running: false,
@@ -556,7 +558,7 @@ String.implement({shorten: function (max, end) {
 		
 			faster upload with multipart transfert or resume on error with multiple chunk transfert ?
 		*/
-		HTML5MultipartTransfert = new Class(Object.merge({
+		HTML5MultipartTransfert = new Class(Object.append({
 		
 			Extends: Transfert,
 			loaded: 0,
