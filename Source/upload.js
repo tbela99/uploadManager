@@ -69,7 +69,7 @@ String.implement({shorten: function (max, end) {
 			
 			attachDragEvents: function (el, options) {
 			
-				$(el).addEvents(dragdrop).store(store, options).grab(new Element('div', {text: 'Drop files here', 'style': 'display:none'}), 'top');								
+				$(el).addEvents(dragdrop).store(store, options).grab(new Element('div[text=Drop files here][style=display:none][class=drop-upload]'), 'top');								
 				return this
 			},
 
@@ -220,13 +220,14 @@ String.implement({shorten: function (max, end) {
 							this.state = 4;
 							this.filesize = json.size;
 							this.complete = true;
-							uploadManager.actives[container].erase(this)
+							uploadManager.actives[container].erase(this);
 							
 							var id = options.id,
-								file = $(id + '_lfile').set({checked: true, value: json.path}),
+								file = $(id + '_lfile').set({checked: true, value: json.path, disabled: false}),
 								change = function () { file.checked = this.checked },
 								checkbox = $(id).set({
 										value: json.file,
+										disabled: false,
 										events: {
 											
 											change: change,
@@ -259,7 +260,8 @@ String.implement({shorten: function (max, end) {
 					}).setOptions(options);
 				
 				element = this.createElement(options);
-				element.getElement('#' + options.id).store(transport, this);					
+				
+				this.checkbox = element.getElement('#' + options.id).store(transport, this);			
 				element.getElement('a.cancel-upload').addEvent("click", function(e) { 
 						
 					e.stop(); 
@@ -272,8 +274,8 @@ String.implement({shorten: function (max, end) {
 			
 				this.element = new Element('div', {'class': 'upload-container',
 								html: '<iframe id="' + options.id + '_iframe" src="' + options.base + ( options.base.indexOf('?') == -1 ? '?' : '&') + options.id + '" frameborder="no" scrolling="no" style="border:0;overflow:hidden;padding:0;display:block;float:left;height:20px;width:228px; "></iframe>'
-								+ '<input type="checkbox" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
-								+ '<input type="checkbox" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
+								+ '<input type="checkbox" disabled="disabled" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
+								+ '<input type="checkbox" disabled="disabled" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
 								+ '<span class="upload-span" id="' + options.id + '_label"><a class="cancel-upload" href="' + options.base + '">Cancel</a></span>'
 							}).inject(options.container);
 					
@@ -368,7 +370,10 @@ String.implement({shorten: function (max, end) {
 					
 							container: first.set('title', file.name),
 							text: file.name.shorten()
-						}, this.options.progressbar));
+						}, this.options.progressbar)).addEvent('change', function () {
+						
+							first.set('title', file.name + ' (' + this.value + '%)')
+						});
 					
 				this.fields = span.getNext().setStyle('display', 'none');
 				this.fields.getFirst().style.display = 'none';
@@ -497,8 +502,8 @@ String.implement({shorten: function (max, end) {
 				this.element = new Element('div', {
 						'class': 'upload-container',
 						html: '<div style="display:inline-block;padding:3px"><span style="display:none">&nbsp;</span><span><input id="' + options.id + '_input" type="file" name="' + options.id + '_input"' + (options.multiple ? ' multiple="multiple"' : '') + '/>'
-						+ '<input type="checkbox" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
-						+ '<input type="checkbox" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
+						+ '<input type="checkbox" disabled="disabled" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
+						+ '<input type="checkbox" disabled="disabled" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
 						+ '<label for="'+ options.id + '"></label>'
 						+ '</span></div><a class="cancel-upload" href="' + options.base + '">Cancel</a><a class="resume-upload" style="display:none" href="' + options.base + '">Retry</a>'
 					}).inject(options.container);
@@ -597,8 +602,8 @@ String.implement({shorten: function (max, end) {
 				this.element = new Element('div', {
 						'class': 'upload-container',
 						html: '<div style="display:inline-block;padding:3px"><span style="display:none">&nbsp;</span><span><input id="' + options.id + '_input" type="file" name="' + options.id + '_input"' + (options.multiple ? ' multiple="multiple"' : '') + '/>'
-						+ '<input type="checkbox" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
-						+ '<input type="checkbox" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
+						+ '<input type="checkbox" disabled="disabled" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
+						+ '<input type="checkbox" disabled="disabled" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
 						+ '<label for="'+ options.id + '"></label>'
 						+ '</span></div><a class="cancel-upload" href="' + options.base + '">Cancel</a><a class="pause-upload" style="display:none" href="' + options.base + '">Pause</a>'
 					}).inject(options.container);
