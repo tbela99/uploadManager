@@ -29,6 +29,7 @@ var ProgressBar = new Class({
 		fillColor: '#aaa',
 		color: '#fff'
 	},
+	previous: 0,
 	Implements: [Options, Events],
 	initialize: function (options) {
 	
@@ -44,17 +45,18 @@ var ProgressBar = new Class({
 			style = 'position:absolute;display:inline-block;margin:0 auto;left:0;top:0',
 			self = this,
 			timer,
+			value = 0,
 			change = function () {
 			
-				self.value = last.getStyle('width').toInt() / self.width;
-				self.fireEvent('change', [self.value, self])
+				self.fireEvent('change', [value, self])
 			},
 			clear = function () {
 			
 				clearTimeout(timer);
 				change()
 			},
-			last;
+			last,
+			set;
 			
 		this.value = 0;
 		this.element = new Element('span', {style: 'width:' + width + 'px;position:relative;border:1px solid ' + options.fillColor + ';background:' + options.color + ';display:inline-block;'}).
@@ -78,6 +80,18 @@ var ProgressBar = new Class({
 																		onCancel: clear,
 																		onComplete: clear
 																});
+										
+		//little hack to improve the precision of the value
+		set = this.progress.set.bind(this.progress);
+		
+		this.progress.set = function (now) {
+		
+			this.value = value = now[0].width[0].value / this.width;
+			return set(now)
+			
+		}.bind(this);
+		
+		
 		if(options.text === '') this.elements[1].set('html', '&nbsp;');
 		this.setValue(options.value)
 	},
@@ -97,6 +111,7 @@ var ProgressBar = new Class({
 			var tween = {width: value * this.width},
 				self = this;
 				
+			this.previous = this.value;
 			this.progress.start({0: tween, 1: tween}).chain(function () {
 			
 				if(value == 1) self.fireEvent('complete', self)

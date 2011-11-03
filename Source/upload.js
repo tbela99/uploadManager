@@ -235,6 +235,7 @@ String.implement({shorten: function (max, end) {
 										}
 									});
 									
+								checkbox.value = checkbox.value.cleanChars();
 								checkbox.style.display = '';
 								checkbox.checked = true
 						},
@@ -372,7 +373,7 @@ String.implement({shorten: function (max, end) {
 							text: file.name.shorten()
 						}, this.options.progressbar)).addEvent('change', function () {
 						
-							first.set('title', file.name + ' (' + this.value + '%)')
+							first.set('title', file.name + ' (' + (this.value * 100).format() + '%)')
 						});
 					
 				this.fields = span.getNext().setStyle('display', 'none');
