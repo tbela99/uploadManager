@@ -67,7 +67,7 @@ var win = parent.window,
 	
 	//if custom header => html5 file upload
   
-	$u = &new uploadHelper(TEMP_PATH, 'image');
+	$u = new uploadHelper(TEMP_PATH, 'image');
 	
 	if(!($file = $u->upload_file())) {
 

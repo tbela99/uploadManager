@@ -235,7 +235,6 @@ String.implement({shorten: function (max, end) {
 										}
 									});
 									
-								checkbox.value = checkbox.value.cleanChars();
 								checkbox.style.display = '';
 								checkbox.checked = true
 						},

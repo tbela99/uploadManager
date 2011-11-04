@@ -114,6 +114,12 @@ var ProgressBar = new Class({
 			this.previous = this.value;
 			this.progress.start({0: tween, 1: tween}).chain(function () {
 			
+				// if(self.value != value) {
+				
+					// self.value = value;
+					// self.fireEvent('change', [value, self])
+				// }
+				
 				if(value == 1) self.fireEvent('complete', self)
 			})
 		}
