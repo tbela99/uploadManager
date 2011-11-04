@@ -67,7 +67,7 @@ var ProgressBar = new Class({
 							).
 						grab(new Element('span', {html: '&nbsp;', style: 'width:' + options.value + 'px;' + (options.gradient.indexOf(':') == -1 ? 'background' : 'filter') + ':' + options.gradient + ';' + style}));
 		
-		var last = this.element.getLast();
+		last = this.element.getLast();
 		height = last.getStyle('height');
 		this.element.setStyle('height', height).getElement('span+span').setStyle('height', height);
 		this.elements = $$(this.element.getFirst(), this.element.getElement('span span'));
