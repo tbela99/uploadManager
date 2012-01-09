@@ -112,16 +112,7 @@ var ProgressBar = new Class({
 				self = this;
 				
 			this.previous = this.value;
-			this.progress.start({0: tween, 1: tween}).chain(function () {
-			
-				// if(self.value != value) {
-				
-					// self.value = value;
-					// self.fireEvent('change', [value, self])
-				// }
-				
-				if(value == 1) self.fireEvent('complete', self)
-			})
+			this.progress.start({0: tween, 1: tween}).chain(function () { if(value == 1) self.fireEvent('complete', self) })
 		}
 		
 		return this
@@ -138,25 +129,25 @@ var ProgressBar = new Class({
 		
 			case 'firefox':
 					
-				if(Browser.version >= '3.6') bg = '-moz-linear-gradient(top, {0} 0%, {1} 59%)'; /* FF3.6+ */
+				if(Browser.version >= '3.6') bg = '-moz-linear-gradient(top,{0} 0%,{1} 59%)'; /* FF3.6+ */
 				
 				break;
 			case 'chrome':
 			case 'safari':
 			
-				if((Browser.name == 'chrome' && Browser.version >= '10') || (Browser.name == 'safari' && Browser.version >= '5.1')) bg = '-webkit-linear-gradient(top, {0} 0%, {1} 59%)'; /* Chrome10+,Safari5.1+ */
-				else if(Browser.chrome || Browser.version >= '4') bg = '-webkit-gradient(linear, left top, left bottom, color-stop(0%,{0}), color-stop(59%,{1}))'; /* Chrome,Safari4+ */
+				if((Browser.name == 'chrome' && Browser.version >= '10') || (Browser.name == 'safari' && Browser.version >= '5.1')) bg = '-webkit-linear-gradient(top,{0} 0%,{1} 59%)'; /* Chrome10+,Safari5.1+ */
+				else if(Browser.chrome || Browser.version >= '4') bg = '-webkit-gradient(linear, left top,left bottom,color-stop(0%,{0}),color-stop(59%,{1}))'; /* Chrome,Safari4+ */
 				
 				break;
 			case 'opera':
 			
-				if(Browser.version >= '11.10') bg = '-o-linear-gradient(top, {0} 0%, {1} 59%)'; /* Opera11.10+ */
+				if(Browser.version >= '11.10') bg = '-o-linear-gradient(top,{0} 0%,{1} 59%)'; /* Opera11.10+ */
 				
 				break;
 			case 'ie':
 				
-				if(Browser.version >= '10') bg = '-ms-linear-gradient(top, {0} 0%, {1} 59%)'; /* IE10+ */
-				else if(Browser.version >= 6) bg = "progid:DXImageTransform.Microsoft.gradient( startColorstr='{0}', endColorstr='{1}',GradientType=0 )"; /* IE6-9 */
+				if(Browser.version >= '10') bg = '-ms-linear-gradient(top,{0} 0%,{1} 59%)'; /* IE10+ */
+				else if(Browser.version >= 6) bg = "progid:DXImageTransform.Microsoft.gradient(startColorstr='{0}', endColorstr='{1}',GradientType=0 )"; /* IE6-9 */
 				break;
 		}
 	

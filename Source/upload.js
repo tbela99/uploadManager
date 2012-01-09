@@ -46,8 +46,8 @@ String.implement({shorten: function (max, end) {
 			
 			/* can handle multiple files upload */
 			multiple: 'multiple' in div,
-			//FF 4.01, chrome 11
-			resume: window.File && ('slice' in File.prototype || 'mozSlice' in File.prototype || 'webkitSlice' in File.prototype),
+			//FF 4.01, chrome 11: resume upload seems to be broken, disabled
+			resume: false, //window.File && ('slice' in File.prototype || 'mozSlice' in File.prototype || 'webkitSlice' in File.prototype),
 						
 			//upload hash
 			uploads: {},

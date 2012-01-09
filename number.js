@@ -2,26 +2,29 @@
 	Number.implement({
 		
 		format: function(kSep, floatsep, decimals, fill) {
-		
+
 			decimals = decimals == undefined ? 2 : decimals;
 			floatsep = floatsep == undefined ? '.' : floatsep;
-			kSep = kSep == undefined ? ' ' : undefined;
+			kSep = kSep == undefined ? ' ' : kSep;
 			fill = fill == undefined ? '' : fill;
 
 			var parts = this.round(decimals).toString().split('.'),
-			integer = parts[0];
-			
-			while (integer != (integer = integer.replace(/([0-9])(...($|[^0-9]))/, '$1' + kSep + '$2')));
-			
-			if (decimals === 0) return integer;
+				integer = parts[0],
+				string = '' + integer,
+				str = '',
+				i, j;
+				
+			for(i = 0, j = string.length; j > 0; j-- && i++) str = (j > 1 && i % 3 == 2 ? kSep : '') + string.charAt(j-1) + str;
+
+			if (decimals === 0) return str;
 
 			var dec = parts[1] ? parts[1].substr(0, decimals) : '';
-			  
+
 			if(fill) while(dec.length < decimals) dec += '0';
 
-			return integer + (dec ? floatsep + dec : '')
+			return str + (dec ? floatsep + dec : '')
 		},
-		  
+
 		toFileSize: function(units) {
 		
 			if(this == 0) return 0;
