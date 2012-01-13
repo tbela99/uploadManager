@@ -47,7 +47,7 @@ String.implement({shorten: function (max, end) {
 			/* can handle multiple files upload */
 			multiple: 'multiple' in div,
 			//FF 4.01, chrome 11: resume upload seems to be broken, disabled
-			resume: false, //window.File && ('slice' in File.prototype || 'mozSlice' in File.prototype || 'webkitSlice' in File.prototype),
+			resume: window.File && ('slice' in File.prototype || 'mozSlice' in File.prototype || 'webkitSlice' in File.prototype),
 						
 			//upload hash
 			uploads: {},
@@ -668,7 +668,7 @@ String.implement({shorten: function (max, end) {
 					method = 'slice',
 					offset = this.options.chunckSize,
 					//browser version, mootools truncate this value and firefox 4.0.1 is reported as firefox 4. this is bad
-					version = navigator.userAgent.replace(/.*?(Version\/(\S+)|Chrome\/(\S+)|MSIE ([^;\s]+)|Firefox\/(\S+)|Opera Mini\/([^\d.]+)).*?$/, '$2$3$4$5$6');
+					version = navigator.userAgent.replace(/.*?(Version\/(\S+)|Chrome\/(\S+)|MSIE ([^;\s]+)|Firefox\/(\S+)|Opera Mini\/([^\d.]+)).*?$/, '$2$3$4$5$6').toInt();
 			
 				this.add(xhr.upload, 'progress', function(e) { if (e.lengthComputable) this.progress.setValue((e.loaded + this.loaded) / this.size) }).						
 					add(xhr, 'error', this.pause).
@@ -760,7 +760,7 @@ String.implement({shorten: function (max, end) {
 				if(this.loaded + this.options.chunckSize < this.size) xhr.setRequestHeader('Partial', 1);
 				
 				//do nothing
-				if((Browser.chrome && version < '11') || (Browser.firefox && version <= '4'));
+				if((Browser.chrome && version < 11) || (Browser.firefox && version <= 4));
 				else offset += this.loaded;
 				
 				if(this.file.mozSlice) method = 'mozSlice';
