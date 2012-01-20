@@ -38,6 +38,8 @@ String.implement({shorten: function (max, end) {
 	var store = 'umo',
 		transport = 'upl:tr',
 		div = new Element('input', {type: 'file'}),
+		//browser version, mootools truncates this value and firefox 4.0.1 is reported as firefox 4. this is bad
+		version = navigator.userAgent.replace(/.*?(Version\/(\S+)|Chrome\/(\S+)|MSIE ([^;\s]+)|Firefox\/(\S+)|Opera Mini\/([^\d.]+)).*?$/, '$2$3$4$5$6').toInt(),
 		
 		uploadManager = window.uploadManager = {
 			
@@ -136,7 +138,7 @@ String.implement({shorten: function (max, end) {
 				return this
 			},
 			
-			//return Transfert associated to a given id
+			//return Transfert instance associated to a given id
 			get: function (id) { return $(id).retrieve(transport) },
 										
 			getSize: function(container) { 
@@ -666,9 +668,7 @@ String.implement({shorten: function (max, end) {
 								
 				var xhr = this.xhr = new XMLHttpRequest(), 
 					method = 'slice',
-					offset = this.options.chunckSize,
-					//browser version, mootools truncate this value and firefox 4.0.1 is reported as firefox 4. this is bad
-					version = navigator.userAgent.replace(/.*?(Version\/(\S+)|Chrome\/(\S+)|MSIE ([^;\s]+)|Firefox\/(\S+)|Opera Mini\/([^\d.]+)).*?$/, '$2$3$4$5$6').toInt();
+					offset = this.options.chunckSize;
 			
 				this.add(xhr.upload, 'progress', function(e) { if (e.lengthComputable) this.progress.setValue((e.loaded + this.loaded) / this.size) }).						
 					add(xhr, 'error', this.pause).
