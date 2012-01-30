@@ -3,7 +3,7 @@
 script: upload.js
 license: MIT-style license.
 description: Javascript crossbrowser file upload, with some html5 sugar.
-copyright: Copyright (c) 2006 - 2010 Thierry Bela
+copyright: Copyright (c) 2006 - 2012 Thierry Bela
 authors: [Thierry Bela]
 
 requires: 
@@ -32,24 +32,28 @@ String.implement({shorten: function (max, end) {
 	}
 });
 	
-(function ($, window) {
+(function ($, window, undefined) {
 
 "use strict";
 	var store = 'umo',
 		transport = 'upl:tr',
-		div = new Element('input', {type: 'file'}),
+		hasFileReader = 'FileReader' in window,
+		input = (function () { var input = document.createElement('input'); input.type = 'file'; return input })(),
+		fileproto = window.File ? File.prototype : undefined,
+		method = 'mozSlice' in fileproto ? 'mozSlice' : ('webkitSlice' in fileproto ? 'webkitSlice' : ('slice' in fileproto ? 'slice' : false)),
+		brokenSlice = (Browser.chrome && version < 11) || (Browser.firefox && version <= 4),
 		//browser version, mootools truncates this value and firefox 4.0.1 is reported as firefox 4. this is bad
 		version = navigator.userAgent.replace(/.*?(Version\/(\S+)|Chrome\/(\S+)|MSIE ([^;\s]+)|Firefox\/(\S+)|Opera Mini\/([^\d.]+)).*?$/, '$2$3$4$5$6').toInt(),
 		
 		uploadManager = window.uploadManager = {
 			
 			/* xmlhttp can be used */
-			xmlhttpupload: !!div.files && window.XMLHttpRequest && ('upload' in XMLHttpRequest.prototype || window.XMLHttpRequestUpload),
+			xmlhttpupload: 'files' in input && window.XMLHttpRequest && ('upload' in XMLHttpRequest.prototype || !!window.XMLHttpRequestUpload),
 			
 			/* can handle multiple files upload */
-			multiple: 'multiple' in div,
-			//FF 4.01, chrome 11: resume upload seems to be broken, disabled
-			resume: window.File && ('slice' in File.prototype || 'mozSlice' in File.prototype || 'webkitSlice' in File.prototype),
+			multiple: 'multiple' in input,
+			//FF 4.01, chrome 11: resume upload seems to be broken
+			resume: !!method,
 						
 			//upload hash
 			uploads: {},
@@ -60,6 +64,9 @@ String.implement({shorten: function (max, end) {
 			
 			//queue uploads per container
 			enqueue: false,
+			
+			//maximun concurrent uploads, if queue uploads is true
+			concurrent: 1,
 			
 			//transfer queue, callback functions
 			queue: {},
@@ -100,11 +107,11 @@ String.implement({shorten: function (max, end) {
 				}
 				
 				//restrict number of uploaded files
-				if(opt.limit > 0 && this.uploads[container].length >= opt.limit) return null;
+				if(opt.limit > 0 && this.uploads[container].length >= opt.limit) return undefined;
 				
 				//where to send the uploaded file
 				opt.base = opt.base || 'upload.php';
-				opt.id =  opt.name.replace(/[^a-z0-9]/gi, '') + (+new Date());
+				opt.id =  opt.name.replace(/[^a-z0-9]/gi, '') + Date.now();
 				
 				if(opt.iframe || !this.xmlhttpupload) transfer = new Transfert(opt);
 				else if(this.resume) transfer = new HTML5MultipartTransfert(opt);
@@ -112,7 +119,7 @@ String.implement({shorten: function (max, end) {
 			
 				this.uploads[container].push(transfer);
 			
-				return transfer.fireEvent('create', transfer)
+				return transfer
 			},
 			
 			push: function(container, callback) {
@@ -124,15 +131,23 @@ String.implement({shorten: function (max, end) {
 			},
 			
 			load: function (container) {
-			
-				if(!this.enqueue || !this.active) {
-					
-					var callback = this.queue[container].shift();
-					if(callback) {
-					
-						this.active = true;
-						callback()
+		
+				var active = 0, prop;
+				
+				if(this.enqueue && this.active) {
+				
+					for(prop in this.actives[container]) {
+
+						if(this.actives[container].hasOwnProperty(prop) && this.actives[container][prop].state == 1) active++;
+						if(active >= this.concurrent) return this
 					}
+				}
+			
+				var callback = this.queue[container].shift();
+				if(callback) {
+				
+					this.active = true;
+					callback()
 				}
 				
 				return this
@@ -171,26 +186,26 @@ String.implement({shorten: function (max, end) {
 											zIndex: 10
 										}).tween('backgroundColor', '#1096E6')										
 			},	
-			
 			dragexit: function(e) {
 				
 				e.stop(); 
 				this.getFirst().style.display = 'none'
 			},	
-			
 			dragover: function(e) { e.stop() },
-			
 			drop: function (e) {
 			
 				e.stop();
 				
-				var el = this, options = Object.append(el.retrieve(store), {hideDialog: true}), transfer;
-				
+				var el = this, options = Object.append({}, el.retrieve(store), {hideDialog: true}), transfer;
+
 				el.getFirst().style.display = 'none';
 				if(e.event.dataTransfer) Array.from(e.event.dataTransfer.files).each(function (f) { 
 				
-					transfer = uploadManager.upload(options);
-					if(transfer) transfer.load(f) 
+					uploadManager.push(options.container, function () {
+						
+						transfer = uploadManager.upload(Object.append({}, options));
+						if(transfer) transfer.load(f) 
+					})
 				})
 			}
 		},
@@ -216,7 +231,7 @@ String.implement({shorten: function (max, end) {
 				this.addEvents({
 		
 						abort: function () { this.state = 2 },
-						load: function () { this.state = 1; uploadManager.actives[container].push(this) },
+						load: function () { uploadManager.actives[container].push(this) },
 						success: function (json) {
 								
 							this.state = 4;
@@ -243,7 +258,7 @@ String.implement({shorten: function (max, end) {
 						cancel: function () {  
 						
 							this.state = 3;
-							uploadManager.uploads[container].erase(this)
+							uploadManager.uploads[container].erase(this);
 							uploadManager.actives[container].erase(this)
 						},
 						complete: function () { 
@@ -255,7 +270,7 @@ String.implement({shorten: function (max, end) {
 							}
 							else if(uploadManager.enqueue) {
 							
-								uploadManager.active = false;
+								uploadManager.active = Object.every(uploadManager.actives[container], function (upload) { return upload.state == 1 });
 								uploadManager.load(container)							
 							}
 						}
@@ -269,7 +284,8 @@ String.implement({shorten: function (max, end) {
 					e.stop(); 
 					this.cancel() 
 					
-				}.bind(this))
+				}.bind(this));
+				this.fireEvent('create', this)
 			},
 			
 			createElement: function (options) {
@@ -288,9 +304,16 @@ String.implement({shorten: function (max, end) {
 			
 			load: function (file) {
 			
-				this.aborted = false;
+				this.state = 1;
+				this.aborted = false; 
 				this.fireEvent('load', {element: this.element, file: file, size: 0, transfer: this});
-				if(this.aborted) this.fireEvent('abort', {file: file, message: this.message || '', transfer: this});
+				
+				if(this.aborted) {
+				
+					this.state = 2;
+					this.fireEvent('abort', {file: file, message: this.message || '', transfer: this})
+				}
+				
 				delete this.message;
 				return this;
 			},
@@ -370,21 +393,50 @@ String.implement({shorten: function (max, end) {
 				
 				this.progress = new ProgressBar(Object.append({
 					
-							container: first.set('title', file.name),
-							text: file.name.shorten()
-						}, this.options.progressbar)).addEvent('change', function () {
-						
-							first.set('title', file.name + ' (' + (this.value * 100).format() + '%)')
-						});
+					container: first.set('title', file.name),
+					text: file.name.shorten()
+				}, this.options.progressbar)).addEvent('change', function () {
+				
+					first.set('title', file.name + ' (' + (this.value * 100).format() + '%)')
+				});
 					
 				this.fields = span.getNext().setStyle('display', 'none');
 				this.fields.getFirst().style.display = 'none';
 				this.element.getElement('input[type=file]').destroy();	
 				
 				span.destroy();
-				uploadManager.push(this.options.container, this.upload.bind(this));
+				uploadManager.push(this.options.container, function () {
+				
+					this.state = 1;
+					this.upload() 
+				}.bind(this));
+				
 				if(this.reader) this.reader.readAsBinaryString(file);
 				return this
+			},
+			createElement: function (options) {
+			
+				var input = this.createHTML(options).getElement('input[type=file]').addEvent('change', function (e) {
+				
+					var files = Array.from(e.target.files), op = Object.append({}, options, {hideDialog: true}), transfer;
+					
+					this.load(files.shift());
+					
+					files.each(function (f) { 
+					
+						transfer = uploadManager.upload(Object.append({}, op));
+						if(transfer) transfer.load(f)
+					})
+					
+				}.bind(this));
+								
+				if(Browser.name == 'firefox' && Browser.version >= 4) {
+				
+					new Element('a', {text: 'Browse...', 'class': 'browse-upload', href: '#', events: {click: function (e) { e.stop(); input.click() }}}).inject(input.setStyle('display', 'none'), 'before');
+					if(!this.options.hideDialog) input.click.delay(10, input)
+				}
+						
+				return this.addEvent('abort', function () { input.value = '' }).element
 			}
 		},
 		
@@ -393,7 +445,6 @@ String.implement({shorten: function (max, end) {
 			Extends: Transfert,
 			running: false,
 			ready: false,
-			reader: !!window.FileReader,
 			initialize: function(options) {
 					
 				this.addEvents(this.events).addEvents({
@@ -426,14 +477,15 @@ String.implement({shorten: function (max, end) {
 					
 				this.getXHR().binary = !!this.xhr.sendAsBinary;
 						
-				if(this.reader) {
+				if(hasFileReader) {
 				
 					var reader = this.reader = new FileReader();
 						
 					this.add(reader, 'load', function(e) { 
-									this.bin = e.target.result; 
-									this.ready = true 
-								})
+					
+						this.bin = e.target.result; 
+						this.ready = true 
+					})
 				}
 			},
 			
@@ -499,7 +551,7 @@ String.implement({shorten: function (max, end) {
 				this.element.getElement('.resume-upload').style.display = ''
 			},
 			
-			createElement: function (options) {
+			createHTML: function (options) {
 			
 				this.element = new Element('div', {
 						'class': 'upload-container',
@@ -510,27 +562,14 @@ String.implement({shorten: function (max, end) {
 						+ '</span></div><a class="cancel-upload" href="' + options.base + '">Cancel</a><a class="resume-upload" style="display:none" href="' + options.base + '">Retry</a>'
 					}).inject(options.container);
 					
-				this.element.getElement('.resume-upload').addEvent('click', function (e) {
+				this.element.getLast().addEvent('click', function (e) {
 				
 					e.stop();
 					this.initUpload()
+					
 				}.bind(this));
-							
-				var input = this.element.getElement('input[type=file]').addEvent('change', function (e) {
 				
-					var files = Array.from(e.target.files),
-						transfer;
-					
-					this.load(files.shift());
-					files.each(function (f) { 
-						
-						transfer = uploadManager.upload(options);
-						if(transfer) transfer.load(f) 
-					})
-					
-				}.bind(this));
-								
-				return this.addEvent('abort', function () { input.value = '' }).element
+				return this.element
 			},
 			
 			//this launch the transfer, to retry after a failure, just call it again
@@ -552,7 +591,7 @@ String.implement({shorten: function (max, end) {
 			},
 			
 			upload: function () {
-			
+
 				if(this.reader) {
 				
 					if(this.ready) this.initUpload();
@@ -563,24 +602,39 @@ String.implement({shorten: function (max, end) {
 		
 		/*
 		
-			faster upload with multipart transfert or resume on error with multiple chunk transfert ?
+			faster upload with multipart transfert or resume on error with multiple chunk transfert ? both!
 		*/
 		HTML5MultipartTransfert = new Class(Object.append({
 		
 			Extends: Transfert,
+			
+			partial: 0, //partially uploaded chunk
 			loaded: 0,
+			failed: 0,
+			active: 0,
 			options: {
 			
 				//user can stop/resume tranfert only on error ?
-				//pause: false,
-				chunckSize: 1048576	//1Mb
+				/* pause: false, */
+				chunks: 3, //number of concurrent transfers per upload
+				chunckSize: 1048576	//upload chunk max size
 			},
 			initialize: function(options) {
 				
 				this.addEvents(this.events).addEvents({
 				
+					load: function (file) {
+					
+						this.blocks = {};
+						this.uploads = {};
+						this.parts = Math.ceil(file.size / this.options.chunckSize);
+						
+						for(var i = 0; i < this.parts; i++) this.blocks[i] = 1
+					},
 					cancel: function () { 
 					
+						Object.each(this.uploads, function (upload) { if(upload.xhr) upload.xhr.abort() });
+						
 						if(this.remove) {
 						
 							var xhr = new XMLHttpRequest();
@@ -598,8 +652,7 @@ String.implement({shorten: function (max, end) {
 								
 				}).parent(options)
 			},
-			
-			createElement: function (options) {
+			createHTML: function (options) {
 			
 				this.element = new Element('div', {
 						'class': 'upload-container',
@@ -609,178 +662,188 @@ String.implement({shorten: function (max, end) {
 						+ '<label for="'+ options.id + '"></label>'
 						+ '</span></div><a class="cancel-upload" href="' + options.base + '">Cancel</a><a class="pause-upload" style="display:none" href="' + options.base + '">Pause</a>'
 					}).inject(options.container);
-							
-				var input = this.element.getElement('input[type=file]').addEvent('change', function (e) {
-				
-					var files = Array.from(e.target.files),
-						transfer;
 					
-					this.load(files.shift());
-					files.each(function (f) { 
-						
-						transfer = uploadManager.upload(options);
-						if(transfer) transfer.load(f) 
-					})
-					
-				}.bind(this));
-				
 				var pause = this.addEvents({load: function () { if(this.options.pause) pause.style.display = '' }, success: function () {
 				
 					pause.destroy()
-				}}).element.getElement('.pause-upload').addEvent('click', function (e) {
+				}}).element.getLast('.pause-upload').addEvent('click', function (e) {
 			
 					e.stop();
 					
-					if(!pause.hasClass('resume-upload') && this.xhr) {
-					
-						this.xhr.abort();
-						delete this.xhr
-					}
-					
-					else this.resume()
+					this[pause.hasClass('resume-upload') ? 'resume' : 'pause']()
 					
 				}.bind(this));
-							
-				if(Browser.name == 'firefox' && Browser.version >= 4) {
-				
-					new Element('a', {text: 'Browse...', 'class': 'browse-upload', href: '#', events: {click: function (e) { e.stop(); input.click() }}}).inject(input.setStyle('display', 'none'), 'before');
-					if(!this.options.hideDialog) input.click.delay(10, input)
-				}
-						
-				return this.addEvent('abort', function () { input.value = '' }).element
+					
+				return this.element
 			},
 			
 			pause: function () {
 
+				this.paused = true;
 				this.element.getElement('.pause-upload').addClass('resume-upload').set('text', 'Resume').style.display = '';
 				this.fireEvent('pause', this)
 			},
-			
 			resume: function () {
 
+				this.paused = false;
+				this.failed = 0;
 				this.element.getElement('.pause-upload').removeClass('resume-upload').set('text', 'Pause').style.display = this.options.pause ? '' : 'none';
-				this.upload()
+				this.fireEvent('resume', this).upload()
 			},
+			failure: function () {
+		
+				this.failed++;
+				if(this.failed >= this.active) this.pause()
+			},
+			getXHR: function (properties, headers, progress) {
 			
-			send: function () {
-			
-				if(this.xhr) return this;
-								
-				var xhr = this.xhr = new XMLHttpRequest(), 
-					method = 'slice',
-					offset = this.options.chunckSize;
-			
-				this.add(xhr.upload, 'progress', function(e) { if (e.lengthComputable) this.progress.setValue((e.loaded + this.loaded) / this.size) }).						
-					add(xhr, 'error', this.pause).
-					add(xhr, 'abort', this.pause).
-					add(xhr, 'load', function() {
-
-						//console.log(xhr)
-						//aborted ?
-						if(xhr.readyState == 0) {
-						
-							this.pause();
-							return
-						}
-						
-						var status, json, event = 'success';
-						this.running = false;
-						
-						try { status = xhr.status } catch(e) {  }
-						
-						//success
-						if (status >= 200 && status < 300) {
-						
-							try { 
-							
-								json = JSON.decode(xhr.responseText);
-								//else 
-								this.loaded = json.size;
-								
-								if(json.remove) this.remove = json.remove;
-								
-								if(this.size > json.size) {
-								
-									if(json.success) {
-										
-										//load next
-										delete this.xhr;
-										this.upload()
-									}
-									
-									else {
-									
-										//failure for some reason
-										this.message = 'Uploaded file has been corrupted';
-										this.cancel()
-									}
-								}		
-					
-								else {
-								
-									
-									json.transfer = this;
-									json.element = this.element;
-									if(json.message) this.message = json.message;
-									
-									if(json.success) {
-									
-										if(this.size == json.size) {
-											
-											var progress = $(this.progress.setValue(1)),
-												self = this,
-												options = this.options;
-													
-											(function () {
-											
-												progress.style.display = 'none';
-												self.fields.getElement('label').set({text: self.filename.shorten() + ' (' + self.size.toFileSize() + ')', title: self.filename});
-												self.fields.style.display = '';
-												(function () { progress.destroy() }).delay(50)
-											}).delay(10)
-										}
-									}
-									
-									if(!json.success || json.size != this.size) event = 'failure';
-									this.fireEvent(event, event == 'failure' ? this : json).fireEvent('complete', this)
-								}
-							}			
-									
-							catch(e) { }
-						}
-						
-					}.bind(this));
-					
+				var xhr = new XMLHttpRequest(), property;
+				
+				if(progress) this.add(xhr.upload, 'progress', progress);
+				
+				properties = Object.append({error: this.failure, abort: this.failure}, properties);
+				
+				for(property in properties) if(properties.hasOwnProperty(property)) this.add(xhr, property, properties[property]);
+				
 				xhr.open('POST', this.options.base, true);
+				xhr.setRequestHeader('Size', this.size);
 				xhr.setRequestHeader('Filename', this.filename);
 				xhr.setRequestHeader('Sender', 'XMLHttpRequest');
-				xhr.setRequestHeader('Size', this.size);
-				xhr.setRequestHeader('Guid', this.guid);
-					
-				if(this.loaded + this.options.chunckSize < this.size) xhr.setRequestHeader('Partial', 1);
 				
-				//do nothing
-				if((Browser.chrome && version < 11) || (Browser.firefox && version <= 4));
-				else offset += this.loaded;
+				if(headers != undefined) for(property in headers) if(headers.hasOwnProperty(property)) xhr.setRequestHeader(property, headers[property]);
 				
-				if(this.file.mozSlice) method = 'mozSlice';
-				else if(this.file.webkitSlice) method = 'webkitSlice';
+				return xhr
+			},
+			compute: function () {
+			
+				var loaded = 0, property;
 				
-				xhr.send(this.file.size < this.options.chunckSize ? this.file : this.file[method](this.loaded, offset));
+				for(property in this.uploads) loaded += this.uploads[property].loaded;
+				this.partial = loaded;
 				
 				return this
 			},
+			send: function (index) {
 			
-			/*
+				if(this.uploads[index].xhr || this.uploads[index].success) return this;
+								
+				var xhr,
+					upload = this.uploads[index], 
+					headers = {
+						
+						Current: index,
+						Offset: upload.offset,
+						'Chunk-Size': upload.blob.size,
+						Guid: this.guid
+					},
+					offset = this.options.chunckSize + (!brokenSlice ? this.uploads[index].loaded : 0);
 			
-				prefetch file infos
-			*/
-			upload: function () {
-			
-					var xhr = new XMLHttpRequest();
-					this.add(xhr, 'error', this.pause).
-						add(xhr, 'abort', this.pause).
-						add(xhr, 'load', function () {
+				if(upload.loaded < upload.blob.size) headers.Partial = 1;
+				
+				xhr = this.uploads[index].xhr = this.getXHR({
+				
+					load: function() {
+
+							if(xhr.readyState == 0) {
+							
+								this.pause();
+								return
+							}
+							
+							var status, json, event = 'success';
+							
+							try { status = xhr.status } catch(e) {  }
+							
+							//success
+							if (status >= 200 && status < 300) {
+							
+								try { 
+								
+									json = JSON.decode(xhr.responseText);
+									
+									if(json.remove) this.remove = json.remove;
+									
+									if(upload.blob.size > json.size) {
+									
+										if(json.success) {
+											
+											//load next
+											delete this.uploads[index].xhr;
+											this.initUpload(index)
+										}
+										
+										else {
+										
+											//failure for some reason
+											this.message = 'Uploaded file has been corrupted';
+											this.failure()
+										}
+									}		
+						
+									else {
+									
+										
+										json.transfer = this;
+										json.element = this.element;
+										if(json.message) this.message = json.message;
+										
+										if(json.success) {
+										
+											upload.loaded = json.size;
+											
+											if(json.size == upload.blob.size) {
+												
+												this.active--;
+												this.loaded += json.size;
+												
+												upload.success = true;
+												delete this.uploads[index]
+												delete this.blocks[index]
+											}
+											
+											this.compute();
+											if(this.size > this.loaded) this.upload();
+											else if(this.size == this.loaded) {
+												
+												var progress = $(this.progress.setValue(1)),
+													self = this,
+													options = this.options;
+														
+												(function () {
+												
+													progress.style.display = 'none';
+													self.fields.getElement('label').set({text: self.filename.shorten() + ' (' + self.size.toFileSize() + ')', title: self.filename});
+													self.fields.style.display = '';
+													(function () { progress.destroy() }).delay(50)
+												}).delay(10);
+												
+												json.size = this.size;
+												this.fireEvent('success', json).fireEvent('complete', this)
+											}
+										}
+									}
+								}			
+										
+								catch(e) { }
+							}
+							
+						}
+					},
+					headers,
+					function(e) { if (e.lengthComputable) this.progress.setValue((e.loaded + this.loaded + this.partial) / this.size) }
+				);
+				
+				xhr.send(this.uploads[index].blob[method](this.uploads[index].loaded, offset))
+			},
+			initUpload: function (index) {
+		
+				if(this.uploads[index] && this.uploads[index].xhr) return;
+				
+				var xhr = this.getXHR({
+				
+						error: this.pause,
+						abort: this.pause,
+						load: function () {
 					
 							var status, json;
 							try { status = xhr.status } catch(e) {}
@@ -796,33 +859,106 @@ String.implement({shorten: function (max, end) {
 									if(!json.success) {
 										
 										this.message = 'Failed to prefetch file infos';
-										this.cancel();
+										this.failure();
 										return
 									}
 									
-									this.loaded = json.size;
-									if(!this.guid) this.guid = json.guid;
-									this.send()
+									//if(!this.uploads[index]) return;
+									this.uploads[index].loaded = json.size;
+									this.compute().send(index)
 								}					
 								catch(e) { 
 								
 									this.message = 'Failed to prefetch file infos';
-									this.cancel()
+									this.failure()
 								}
 							}
-					});
+						}
+					},
+					{
+						Current: index,
+						Offset: this.uploads[index].offset,
+						'Chunk-Size': this.uploads[index].blob.size,
+						Prefetch: 1,
+						Guid: this.guid
+					}
+				);
+				xhr.send()			
+			},
+			createGuid: function () {
+			
+				var xhr = this.getXHR({
+				
+						error: this.pause,
+						abort: this.pause,
+						load: function () {
 					
-					xhr.open('POST', this.options.base, true);
-					xhr.setRequestHeader('Filename', this.filename);
-					xhr.setRequestHeader('Sender', 'XMLHttpRequest');
-					xhr.setRequestHeader('Size', this.size);
-					xhr.setRequestHeader('Prefetch', 1);
-					if(this.guid) xhr.setRequestHeader('Guid', this.guid);
+							var status, json;
+							try { status = xhr.status } catch(e) {}
+							
+							//success
+							if (status >= 200 && status < 300) {
+							
+								try { 
+								
+									json = JSON.decode(xhr.responseText);
+									
+									//failed for some reasons
+									if(!json.success) {
+										
+										this.message = 'Failed to prefetch file infos';
+										this.failure();
+										return
+									}
+									
+									this.guid = json.guid;
+									this.upload()
+								}					
+								catch(e) { 
+								
+									this.message = 'Failed to prefetch file infos';
+									this.failure()
+								}
+							}
+						}
+					},
+					{Parts: this.parts, Prefetch: 1}
+				);
+							
+				xhr.send();
+				
+				return this
+			},
+			upload: function () {
+
+				if(this.paused) return;
+				
+				var i, offset, chunckSize = this.options.chunckSize;
+				
+				if(!this.guid) return this.createGuid();
+				
+				for(i in this.blocks) {
+						
+					if(this.active == this.options.chunks) break;
 					
-					xhr.send()
+					if(!this.uploads[i]) {
+						
+						offset = Math.min(this.size, i * chunckSize);
+						this.uploads[i] = {
+						
+							loaded: 0,
+							offset: offset,
+							blob: this.file[method](offset, chunckSize + (!brokenSlice ? offset : 0))
+						}
+					}
+					
+					this.initUpload(i);
+					this.active++
+				}
 			}
+			
 		}, HTML5));
 		
 		Object.append(Element.NativeEvents, {dragenter: 2, dragexit: 2, dragover: 2, drop: 2});
-		div.destroy()	
+		
 })(document.id, this);

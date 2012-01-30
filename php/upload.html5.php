@@ -33,6 +33,7 @@
 			$filename = '';
 			$success = true;
 			
+			//create transfert log
 			if(empty($headers['Guid'])) {
 				
 				$guid = uploadHelper::uuid();
@@ -43,36 +44,55 @@
 					
 				//store file path & size
 				$filename = uploadHelper::create_filename(basename($headers['Filename']).'.tmp', TEMP_PATH);
+				//$chunk = $filename.$headers['Current'];
 				
 				//force empty file creation
 				fclose(fopen($filename, 'w'));
-				file_put_contents(TEMP_PATH.DS.$guid, basename($filename)."\n".(int) $headers['Size']);
+				//fclose(fopen($chunk, 'w'));
+				file_put_contents(TEMP_PATH.DS.$guid, basename($filename)."\n".$headers['Parts']);
+				
+				echo json_encode(array('guid' => $guid, 'success' => $success, 'remove' => $url.'r='.($guid ? '&guid='.$guid : '')));
+				exit();
 			}
 			
 			else {
-			
-				$guid = $headers['Guid'];
-				$file = TEMP_PATH.DS.$guid;
 				
-				$infos = is_file($file) ? explode("\n", file_get_contents($file)) : array();
+				if(empty($headers['Chunk-Size']) || 
+					!isset($headers['Current']) || 
+					!isset($headers['Offset']) || 
+					!is_numeric($headers['Chunk-Size']) || 
+					!is_numeric($headers['Current']) || 
+					!is_numeric($headers['Offset'])) {
+				
+					echo json_encode(array('success' => false, 'message' => 'Invalid headers sent'));
+					exit();
+				}
+				
+				$guid = $headers['Guid'];
+				$filename = TEMP_PATH.DS.$guid;
+				
+				$infos = is_file($filename) ? explode("\n", file_get_contents($filename)) : array();
 				
 				//guid validation
-				if(!preg_match('/[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}/', $guid) || !is_file($file) || empty($infos[0]) || !is_file(TEMP_PATH.DS.$infos[0])) {
+				if(!preg_match('/[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}/', $guid) || !is_file($filename) || empty($infos[0]) || !is_file(TEMP_PATH.DS.$infos[0])) {
 				
 					echo json_encode(array('success' => false, 'message' => 'Invalid guid'));
 					exit();
 				}
 				
-				$filename = TEMP_PATH.DS.$infos[0];
-				//$filesize = $file[1];
-			}
+				$chunk = TEMP_PATH.DS.$infos[0].$headers['Current'];
+				
+				if(!is_file($chunk))
+					fclose(fopen($chunk, 'w'));
 			
-			echo json_encode(array('guid' => $guid, 'size' => filesize($filename), 'success' => $success, 'remove' => $url.'r='.($guid ? '&guid='.$guid : '')));
-			exit();
+				echo json_encode(array('guid' => $guid, 'size' => filesize($chunk), 'success' => $success, 'remove' => $url.'r='.($guid ? '&guid='.$guid : '')));
+				exit();
+			}
 		}
 		
 		$success = true;
 		$filename = '';
+		$path = '';
 		$guid = '';
 		
 		//resume upload
@@ -82,8 +102,7 @@
 			$file = TEMP_PATH.DS.$guid;
 			
 			$infos = is_file($file) ? explode("\n", file_get_contents($file)) : array();
-			
-			
+						
 			//guid validation
 			if(!preg_match('/[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}/', $guid)) {
 			
@@ -97,7 +116,10 @@
 				exit();
 			}
 			
-			$filename = TEMP_PATH.DS.$infos[0];
+			//here we store the partial upload
+			//read the segment info
+			$path = uploadHelper::encrypt(TEMP_PATH.DS.$infos[0]);
+			$filename = TEMP_PATH.DS.$infos[0].$headers['Current'];
 			
 			ignore_user_abort(true);
 			$handle = fopen($filename, 'ab');
@@ -115,36 +137,60 @@
 			
 			$filename = uploadHelper::create_filename(basename($headers['Filename']).'.tmp', TEMP_PATH);			
 			file_put_contents($filename, file_get_contents('php://input'));
+			$path = uploadHelper::encrypt($filename);
 		}
 		
-		$path = uploadHelper::encrypt($filename);
-		
+		$filesize = isset($headers['Chunk-Size']) ? $headers['Chunk-Size'] : $headers['Size'];
 		$size = filesize($filename);
 		
-		echo json_encode(array('file' => basename($headers['Filename']), 'path' => $path, 'success' =>  !empty($headers['Partial']) || $size == $headers['Size'], 'size' => $size, 'remove' => $url.'r='.urlencode($path).($guid ? '&guid='.$guid : '')));
-	
-		if($size == 0 || (empty($headers['Partial']) && $size != $headers['Size']))
+		if($size == 0 || (empty($headers['Partial']) && $size != $filesize))
 			unlink($filename);
-		
-		//remove file
-	} else if(array_key_exists('guid', $_GET)) {
-
-		if($guid = uploadHelper::getVar('guid')) {
-		
-			if(preg_match('/[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}/', $guid) && is_file(TEMP_PATH.DS.$guid)) {
+		else
+			if(isset($headers['Guid']) && $filesize == $size) {
 			
-				$infos = explode("\n", file_get_contents(TEMP_PATH.DS.$guid));
+				//merge
+				$handle = fopen(TEMP_PATH.DS.$infos[0], 'r+b');
+				fseek($handle, $headers['Offset']);
+				fwrite($handle, file_get_contents($filename));
+				fclose($handle);
+			}
+			
+		echo json_encode(array(
+		
+								'file' => basename($headers['Filename']),
+								'path' => $path, 
+								'success' =>  !empty($headers['Partial']) || $size == $filesize, 
+								'size' => $size, 'remove' => $url.'r='.urlencode($path).($guid ? '&guid='.$guid : '')
+							)
+						);
+	
+	} 
+	
+	else 
+		//remove file
+		if(array_key_exists('guid', $_GET)) {
+
+			if($guid = uploadHelper::getVar('guid')) {
+			
+				if(preg_match('/[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}/', $guid) && is_file(TEMP_PATH.DS.$guid)) {
 				
-				if(is_file(TEMP_PATH.DS.$infos[0]))
-					unlink(TEMP_PATH.DS.$infos[0]);
+					//remove chunks
+					$infos = explode("\n", file_get_contents(TEMP_PATH.DS.$guid));
 					
-				unlink(TEMP_PATH.DS.$guid);
+					if(is_file(TEMP_PATH.DS.$infos[0]))
+						unlink(TEMP_PATH.DS.$infos[0]);
+						
+					for($i = 0; $i < $infos[1]; $i++)
+						if(is_file(TEMP_PATH.DS.$infos[0].$i))
+							unlink(TEMP_PATH.DS.$infos[0].$i);
+						
+					unlink(TEMP_PATH.DS.$guid);
+				}
 			}
 		}
-	}
 	
 	else
-	
+		//remove file
 		if($file = uploadHelper::getVar('r')) {
 				
 			if(is_file($file = uploadHelper::decrypt($file))) {

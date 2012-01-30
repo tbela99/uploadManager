@@ -38,6 +38,10 @@ creates and manage uploads with the following features:
 
 (*boolean*) queue upload. by default upload are not queued.
 
+### uploadManager Property: concurrent
+
+(*int*) fix the number of active uploads if enqueue is *true*. default to 1
+
 ### uploadManager Property: multiple
 
 (*boolean*) indicates if the browser can handle multiple files selection.
@@ -59,6 +63,7 @@ create a new upload field.
 
 - container - (*string*) upload container id.
 - pause - (*boolean*) allow user to pause/resume upload (if the browser can resume broken upload) otherwise the resume button will only appear when an error occur. default to false.
+- chunks - (*int*) number of chunks uploaded simultaneously for a file.
 - chunckSize - (*int*) chunk file size. default to 1Mb. if the browser can resume broken file upload, file will be split in pieces of a maximum length of chunckSize.
 - base - (*string*, optional) url of the page that will handle server side file upload. default to *upload.php*.
 - limit - (*int*, optional) maximum number of files the user can upload. 0 means no restriction. default to 0.
@@ -171,6 +176,22 @@ Fired when the transfer succeed.
 - file - (*string*) the original file name.
 - path - (*string*) the encrypted file path on the server.
 - size - (*int*) uploaded file size.
+- transfer - (*object*) file upload instance
+
+##### onPause
+
+Fired when the transfer is paused.
+
+##### Arguments:
+
+- transfer - (*object*) file upload instance
+
+##### onResume
+
+Fired when the transfer is resumed.
+
+##### Arguments:
+
 - transfer - (*object*) file upload instance
 
 ##### onComplete
