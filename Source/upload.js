@@ -196,8 +196,8 @@ String.implement({shorten: function (max, end) {
 				el.getFirst().style.display = 'none';
 				if(e.event.dataTransfer) Array.from(e.event.dataTransfer.files).each(function (f) { 
 				
-					transfer = uploadManager.upload(Object.append({}, options));
-					if(transfer) transfer.load(f)
+						transfer = uploadManager.upload(Object.append({}, options));
+						if(transfer) transfer.load(f)
 				})
 			}
 		},
@@ -359,9 +359,7 @@ String.implement({shorten: function (max, end) {
 			
 				fn = fn.bind(this);
 				if(obj.addEventListener) obj.addEventListener(event, fn, false);
-				//drop this line ?
 				else obj['on' + event] = fn;
-				
 				return this
 			},
 
@@ -608,6 +606,7 @@ String.implement({shorten: function (max, end) {
 			active: 0,
 			options: {
 			
+				//user can stop/resume tranfert only on error ?
 				/* pause: false, */
 				chunks: 3, //number of concurrent transfers per upload
 				chunckSize: 1048576	//upload chunk max size
@@ -645,7 +644,6 @@ String.implement({shorten: function (max, end) {
 								
 				}).parent(options)
 			},
-			
 			createHTML: function (options) {
 			
 				this.element = new Element('div', {
@@ -711,7 +709,6 @@ String.implement({shorten: function (max, end) {
 				
 				return xhr
 			},
-			
 			compute: function () {
 			
 				var loaded = 0, property;
@@ -721,7 +718,6 @@ String.implement({shorten: function (max, end) {
 				
 				return this
 			},
-			
 			send: function (index) {
 			
 				if(this.uploads[index].xhr || this.uploads[index].success) return;
@@ -833,7 +829,6 @@ String.implement({shorten: function (max, end) {
 				
 				xhr.send(this.uploads[index].blob[method](this.uploads[index].loaded, offset))
 			},
-			
 			initUpload: function (index) {
 		
 				if(this.uploads[index] && this.uploads[index].xhr) return;
@@ -881,10 +876,8 @@ String.implement({shorten: function (max, end) {
 						Guid: this.guid
 					}
 				);
-				
 				xhr.send()			
 			},
-			
 			createGuid: function () {
 			
 				var xhr = this.getXHR({
@@ -929,7 +922,6 @@ String.implement({shorten: function (max, end) {
 				
 				return this
 			},
-			
 			upload: function () {
 
 				if(this.paused) return;
@@ -938,9 +930,9 @@ String.implement({shorten: function (max, end) {
 				
 				if(!this.guid) {
                                     
-					this.createGuid();
-					return
-				}
+                                    this.createGuid();
+                                    return
+                                }
 				
 				for(i in this.blocks) {
 						
@@ -948,15 +940,15 @@ String.implement({shorten: function (max, end) {
 					
 					if(!this.uploads[i]) {
 						
-						offset = Math.min(this.size, i * chunckSize);
-						this.uploads[i] = {
+                                            offset = Math.min(this.size, i * chunckSize);
+                                            this.uploads[i] = {
 
-								loaded: 0,
-								offset: offset,
-								blob: this.file[method](offset, chunckSize + (!brokenSlice ? offset : 0))
-						}
+                                                    loaded: 0,
+                                                    offset: offset,
+                                                    blob: this.file[method](offset, chunckSize + (!brokenSlice ? offset : 0))
+                                            }
 					}
-					else this.active++;
+                                        else this.active++;
 					
 					this.initUpload(i)
 				}
