@@ -359,6 +359,8 @@ String.implement({shorten: function (max, end) {
 			
 				fn = fn.bind(this);
 				if(obj.addEventListener) obj.addEventListener(event, fn, false);
+				
+				//drop this line ? probably not needed
 				else obj['on' + event] = fn;
 				return this
 			},
@@ -930,9 +932,9 @@ String.implement({shorten: function (max, end) {
 				
 				if(!this.guid) {
                                     
-                                    this.createGuid();
-                                    return
-                                }
+					this.createGuid();
+					return
+				}
 				
 				for(i in this.blocks) {
 						
@@ -940,15 +942,15 @@ String.implement({shorten: function (max, end) {
 					
 					if(!this.uploads[i]) {
 						
-                                            offset = Math.min(this.size, i * chunckSize);
-                                            this.uploads[i] = {
+						offset = Math.min(this.size, i * chunckSize);
+						this.uploads[i] = {
 
-                                                    loaded: 0,
-                                                    offset: offset,
-                                                    blob: this.file[method](offset, chunckSize + (!brokenSlice ? offset : 0))
-                                            }
+								loaded: 0,
+								offset: offset,
+								blob: this.file[method](offset, chunckSize + (!brokenSlice ? offset : 0))
+						}
 					}
-                                        else this.active++;
+					else this.active++;
 					
 					this.initUpload(i)
 				}
