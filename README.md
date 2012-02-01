@@ -1,7 +1,7 @@
 uploadManager
 ============
 
-Mootools html5 multipart file upload
+Mootools html5/ajax multipart file upload
 
 [Demo](http://tbela.fragged.org/demos/upload/Demo/)
 ![Screenshot](http://github.com/tbela99/uploadManager/raw/master/screenshot.png)
@@ -18,7 +18,7 @@ for a detailed usage see [HOWTO.md](https://github.com/tbela99/uploadManager/blo
 creates and manage uploads with the following features:
 
 - faster upload: each file has multiple chunks uploaded in parallel (Google Chrome, Firefox 3.6+)
-- resume upload on error/pause (Google Chrome, Firefox 3.6+)
+- resume upload on error/pause (Google Chrome, Firefox 4.0+)
 - file drag drop (currently supported by chrome 5+, firefox 3.6+ and safari 5.1+)
 - progress bar for browsers supporting HTML5 File API (chrome5+, safari4+, Firefox 3.6+)
 - no input file for Firefox 4
