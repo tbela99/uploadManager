@@ -43,7 +43,7 @@ String.implement({shorten: function (max, end) {
 		uploadManager = window.uploadManager = {
 			
 			/* xmlhttp can be used */
-			xmlhttpupload: 'files' in input && window.XMLHttpRequest && ('upload' in XMLHttpRequest.prototype || !!window.XMLHttpRequestUpload),
+			xmlhttpupload: 'files' in input && window.XMLHttpRequest && 'upload' in new XMLHttpRequest(),
 			
 			/* can handle multiple files upload */
 			multiple: 'multiple' in input,
@@ -109,7 +109,7 @@ String.implement({shorten: function (max, end) {
 				opt.id =  opt.name.replace(/[^a-z0-9]/gi, '') + Date.now();
 				
 				if(opt.iframe || !this.xmlhttpupload) transfer = new Transfert(opt);
-				else if(this.resume) transfer = new HTML5MultipartTransfert(opt);
+				else if(this.resume && !Browser.opera) transfer = new HTML5MultipartTransfert(opt);
 				else transfer = new HTML5Transfert(opt);
 			
 				this.uploads[container].push(transfer);
