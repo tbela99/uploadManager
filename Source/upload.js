@@ -231,6 +231,20 @@ String.implement({shorten: function (max, end) {
 							this.complete = true;
 							uploadManager.actives[container].erase(this);
 							
+							//ultimate file size limit check
+							if(options.maxsize > 0) {
+								
+								var size = 0;
+								
+								uploadManager.getTransfers(options.container).each(function (transfer) { if(transfer.state == 4) size += transfer.size});
+								
+								if(size > options.maxsize) {
+								
+									this.message = 'file too big (total file size must not exceed ' + options.maxsize.toFileSize() + ')';
+									this.cancel()
+								}
+							}
+							
 							var id = options.id,
 								file = $(id + '_lfile').set({checked: true, value: json.path, disabled: false}),
 								change = function () { file.checked = this.checked },
