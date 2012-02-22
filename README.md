@@ -22,7 +22,7 @@ creates and manage uploads with the following features:
 - file drag drop (currently supported by chrome 5+, firefox 3.6+ and safari 5.1+, IE10 Platform preview 2)
 - progress bar for browsers supporting HTML5 File API (chrome5+, safari4+, Firefox 3.6+, IE10 Platform preview 2, Opera 12 (Next))
 - no input file for Firefox 4+
-- iframe for the others
+- iframe for the others browsers
 - customizable by css (fully customizable in firefox 4 and later)
 - easy to use
 
@@ -58,6 +58,9 @@ creates and manage uploads with the following features:
 						
 						//only one file can be uploaded
 						limit: 1,
+						
+						//upload field name
+						name: 'picture',
 						
 						//filter by file type
 						filetype: 'jpg,gif,png',
@@ -125,7 +128,7 @@ create a new upload field.
 - filetype - (*string*, optional) authorized file type.
 - name - (*string*) name of the upload form field. it contains the original name of the file sent by the user. if the upload succeed a hidden field named *'file_' + name* and containing the encrypted file path on the server will be pushed into the form.
 for example if our form field is named *name[]*, then *name[]* will contains the original file name and *file_name[]* will contains the encrypted file path on the server.
-- progressbar - (*object*, optional) progressbar options. see [Progressbar](http://github.com/tbela99/progressbar/)
+- progressbar - (*mixed*, optional) indicates whether to display a progressbar or not. if *false* then the progressbar is disabled. if *true* the progressbar will use default options. if it is an *object*, it will be passed as progressbar options. see [Progressbar](http://github.com/tbela99/progressbar/)
 - hideDialog - (*boolean*, optional) Firefox 4+ only: if true the file selection dialog will not be shown after the upload instance is created.
 
 ##### Progressbar:
@@ -178,6 +181,14 @@ Fired before the file is uploaded.
 - file - (*string*) the file name.
 - size - (*int*) file size. if the browser supports XMLHTTPRequest file upload, this will be the actual file size, otherwise it will be 0.
 - transfer - (*object*) file upload instance.
+
+##### onProgress
+
+Fired while the file is uploaded.
+
+##### Arguments:
+
+- value - (*number*) - the progress value is between 0 and 1
 
 ##### onAbort
 

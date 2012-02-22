@@ -27,18 +27,18 @@ String.implement({shorten: function (max, end) {
 	}
 });
 	
-(function ($, window, undefined) {
+(function ($, window, undef) {
 
 "use strict";
 	var store = 'umo',
 		transport = 'upl:tr',
 		hasFileReader = 'FileReader' in window,
 		input = (function () { var input = document.createElement('input'); input.type = 'file'; return input })(),
-		fileproto = window.File ? File.prototype : undefined,
+		fileproto = window.File ? File.prototype : undef,
 		method = 'mozSlice' in fileproto ? 'mozSlice' : ('webkitSlice' in fileproto ? 'webkitSlice' : ('slice' in fileproto ? 'slice' : false)),
-		brokenSlice = (Browser.chrome && version < 11) || (Browser.firefox && version <= 4),
-		//browser version, mootools truncates this value and firefox 4.0.1 is reported as firefox 4. this is bad
+		//browser version
 		version = navigator.userAgent.replace(/.*?(Version\/(\S+)|Chrome\/(\S+)|MSIE ([^;\s]+)|Firefox\/(\S+)|Opera Mini\/([^\d.]+)).*?$/, '$2$3$4$5$6').toInt(),
+		brokenSlice = (Browser.chrome && version < 11) || (Browser.firefox && version <= 4),
 		
 		uploadManager = window.uploadManager = {
 			
@@ -91,7 +91,7 @@ String.implement({shorten: function (max, end) {
 
 			upload: function(options) {
 			
-				var opt = Object.append({limit: 0, filesize: 0, maxsize: 0/*, resume: false, iframe: false */}, options),
+				var opt = Object.append({limit: 0, filesize: 0, maxsize: 0, progressbar: true/*, resume: false, iframe: false */}, options),
 					container = opt.container,
 					transfer;
 				
@@ -102,7 +102,7 @@ String.implement({shorten: function (max, end) {
 				}
 				
 				//restrict number of uploaded files
-				if(opt.limit > 0 && this.uploads[container].length >= opt.limit) return undefined;
+				if(opt.limit > 0 && this.uploads[container].length >= opt.limit) return undef;
 				
 				//where to send the uploaded file
 				opt.base = opt.base || 'upload.php';
@@ -396,20 +396,42 @@ String.implement({shorten: function (max, end) {
 				this.size = file.size;
 				this.filename = file.name;
 				
-				var first = this.element.getFirst(),
-					span = first.getElement('span').setStyle('display', 'none');
+				var first = this.element.getFirst('.upload-progress'),
+					span = first.getElement('span').setStyle('display', 'none'),
+					field = span.getNext().setStyle('display', 'none'),
+					progress;
 				
-				this.progress = new ProgressBar(Object.append({
+					this.addEvent('progress', function (value) {
 					
-					container: first.set('title', file.name),
-					text: file.name.shorten()
-				}, this.options.progressbar)).addEvent('change', function () {
+						if(progress) progress.setValue(value);
+						
+						if(value == 1) {
+							
+							field.getElement('label').set({text: this.filename.shorten() + ' (' + this.size.toFileSize() + ')', title: this.filename});
+							field.style.display = ''
+						}
+						
+					});
+					
+				if(this.options.progressbar) progress = new ProgressBar(Object.append({
+						
+						container: first.set('title', file.name),
+						text: file.name.shorten(),
+						onComplete: function () {
+						
+							progress = progress.toElement();
+							progress.style.display = 'none';
+							
+							(function () { progress.destroy() }).delay(50)
+						}
+						
+					}, typeof this.options.progressbar == 'object' ? this.options.progressbar : {})).addEvent('change', function () {
+					
+						first.set('title', file.name + ' (' + (this.value * 100).format() + '%)')
+					});
+					
+				field.getFirst().style.display = 'none';
 				
-					first.set('title', file.name + ' (' + (this.value * 100).format() + '%)')
-				});
-					
-				this.fields = span.getNext().setStyle('display', 'none');
-				this.fields.getFirst().style.display = 'none';
 				this.element.getElement('input[type=file]').destroy();	
 				
 				span.destroy();
@@ -502,7 +524,7 @@ String.implement({shorten: function (max, end) {
 				var xhr = this.xhr = new XMLHttpRequest(),
 					options = this.options;
 				
-				this.add(xhr.upload, 'progress', function(e) { if (e.lengthComputable) this.progress.setValue(e.loaded / e.total) }).						
+				this.add(xhr.upload, 'progress', function(e) { if (e.lengthComputable) this.fireEvent('progress', e.loaded / e.total) }).						
 					add(xhr, 'load', function() {
 
 						if(xhr.status == 0) {
@@ -511,18 +533,9 @@ String.implement({shorten: function (max, end) {
 							return
 						}
 						
-						var progress = $(this.progress.setValue(1)),
-							self = this,
+						var	self = this.fireEvent('progress', 1),
 							options = this.options;
 								
-						(function () {
-						
-							progress.style.display = 'none';
-							self.fields.getElement('label').set({text: self.filename.shorten() + ' (' + self.size.toFileSize() + ')', title: self.filename});
-							self.fields.style.display = '';
-							(function () { progress.destroy() }).delay(50)
-						}).delay(10);
-						
 						var status, json, event = 'success';
 						this.running = false;
 						
@@ -563,7 +576,7 @@ String.implement({shorten: function (max, end) {
 			
 				this.element = new Element('div', {
 						'class': 'upload-container',
-						html: '<div style="display:inline-block;padding:3px"><span style="display:none">&nbsp;</span><span><input id="' + options.id + '_input" type="file" name="' + options.id + '_input"' + (options.multiple ? ' multiple="multiple"' : '') + '/>'
+						html: '<div style="display:inline-block;padding:3px" class="upload-progress"><span style="display:none">&nbsp;</span><span><input id="' + options.id + '_input" type="file" name="' + options.id + '_input"' + (options.multiple ? ' multiple="multiple"' : '') + '/>'
 						+ '<input type="checkbox" disabled="disabled" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
 						+ '<input type="checkbox" disabled="disabled" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
 						+ '<label for="'+ options.id + '"></label>'
@@ -664,7 +677,7 @@ String.implement({shorten: function (max, end) {
 			
 				this.element = new Element('div', {
 						'class': 'upload-container',
-						html: '<div style="display:inline-block;padding:3px"><span style="display:none">&nbsp;</span><span><input id="' + options.id + '_input" type="file" name="' + options.id + '_input"' + (options.multiple ? ' multiple="multiple"' : '') + '/>'
+						html: '<div style="display:inline-block;padding:3px" class="upload-progress"><span style="display:none">&nbsp;</span><span><input id="' + options.id + '_input" type="file" name="' + options.id + '_input"' + (options.multiple ? ' multiple="multiple"' : '') + '/>'
 						+ '<input type="checkbox" disabled="disabled" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
 						+ '<input type="checkbox" disabled="disabled" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
 						+ '<label for="'+ options.id + '"></label>'
@@ -721,7 +734,7 @@ String.implement({shorten: function (max, end) {
 				xhr.setRequestHeader('Filename', this.filename);
 				xhr.setRequestHeader('Sender', 'XMLHttpRequest');
 				
-				if(headers != undefined) for(property in headers) if(headers.hasOwnProperty(property)) xhr.setRequestHeader(property, headers[property]);
+				if(headers != undef) for(property in headers) if(headers.hasOwnProperty(property)) xhr.setRequestHeader(property, headers[property]);
 				
 				return xhr
 			},
@@ -815,18 +828,9 @@ String.implement({shorten: function (max, end) {
 											if(this.size > this.loaded) this.upload();
 											else if(this.size == this.loaded) {
 												
-												var progress = $(this.progress.setValue(1)),
-													self = this,
+												var self = this.fireEvent('progress', 1),
 													options = this.options;
 														
-												(function () {
-												
-													progress.style.display = 'none';
-													self.fields.getElement('label').set({text: self.filename.shorten() + ' (' + self.size.toFileSize() + ')', title: self.filename});
-													self.fields.style.display = '';
-													(function () { progress.destroy() }).delay(50)
-												}).delay(10);
-												
 												json.size = this.size;
 												this.fireEvent('success', json).fireEvent('complete', this)
 											}
@@ -840,7 +844,7 @@ String.implement({shorten: function (max, end) {
 						}
 					},
 					headers,
-					function(e) { if (e.lengthComputable) this.progress.setValue((e.loaded + this.loaded + this.partial) / this.size) }
+					function(e) { if (e.lengthComputable) this.fireEvent('progress', (e.loaded + this.loaded + this.partial) / this.size) }
 				);
 				
 				xhr.send(this.uploads[index].blob[method](this.uploads[index].loaded, offset))

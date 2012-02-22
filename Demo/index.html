@@ -85,7 +85,19 @@ a {
 
 window.addEvent('domready', function() {
 
-	var options = {
+	var progressbarOptions = {
+
+			width: 140, //fix the progressbar width
+			color: '#000', 
+			fillColor: '#fff',
+			text: 'Pending...',
+			onChange: function (value, progressbar) {
+			
+				//console.log(arguments)
+				progressbar.setText('completed: ' + (100 * value).format() + '%')
+			}
+		},
+		options = {
 			/*
 				upload restrictions
 			*/
@@ -117,25 +129,22 @@ window.addEvent('domready', function() {
 			name: 'alias',
 			//limit: 2, /* limit to two downloads */
 			multiple: true, //enable multiple selection in file dialog
-			progressbar: {
-
-				width: 140, //fix the progressbar width
-				color: '#000', 
-				fillColor: '#fff',
-				text: 'Pending...',
-				onChange: function (value, progressbar) {
+			progressbar: progressbarOptions,
+			onCreate: function () {
+			
+				//no progressbar, we display a plain text instead
+				if(!this.options.progressbar) {
 				
-					//console.log(arguments)
-					progressbar.setText('completed: ' + (100 * value).format() + '%')
+					var bar = new Element('span[style=width:140px;text-align:center;display:inline-block][text=\\[upload\\] Pending ...]').inject(this.element, 'top');
+					
+					this.addEvent('progress', function (value) {
+					
+						bar.innerHTML = '[upload] ' + (value * 100).format() + '%';
+						
+						if(value == 1) bar.destroy.delay(50, bar)
+					})
 				}
 			},
-		/*
-			
-			onCreate: function (transfer) {
-			
-				//do something
-			},
-		*/
 			onAbort: function (object) {
 			
 				alert('Upload aborted:\n' + object.message)
@@ -166,12 +175,25 @@ window.addEvent('domready', function() {
 		fn = function () { uploadManager.enqueue = this.checked },
 		fr = function () { options.iframe = this.checked },
 		mu,
+		pr,
 		dd = document.getElement('label[for=dd]');
 	
 	if(uploadManager.multiple) {
 	
 		mu = function () { options.multiple = this.checked };
 		$('multiple').addEvents({click: mu, change: mu}).disabled = false;
+	}
+	
+	if(uploadManager.xmlhttpupload) {
+	
+		mu = function () { options.multiple = this.checked };
+		$('multiple').addEvents({click: mu, change: mu}).disabled = false;
+	}
+	
+	if(uploadManager.xmlhttpupload) {
+	
+		pr = function () { options.progressbar = this.checked ? progressbarOptions : false };
+		$('progressbar').addEvents({click: pr, change: pr}).disabled = false;
 	}
 	
 	dd.set('text', dd.get('text') + (window.DataTransfer ? ' (Yes!)' : ' ... don\'t know :('));
@@ -198,6 +220,7 @@ window.addEvent('domready', function() {
 You can upload up to 3 files.
 <br/>each file must not exceed 2.5Mb.
 <br/>total files size must not exceed 3.5Mb.</span>
+<br/><input type="checkbox" id="progressbar" disabled="disabled"/> <label for="progressbar">Display progressbar</label>
 <br/><input type="checkbox" id="queue"/> <label for="queue">Upload queue</label>
 <br/><input type="checkbox" id="iframe" disabled="disabled"/> <label for="iframe">Use Iframe</label>
 <br/><input type="checkbox" id="multiple" disabled="disabled"/> <label for="multiple">Enable multiple files selection</label>
