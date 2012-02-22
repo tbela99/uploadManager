@@ -303,7 +303,8 @@ Options, Events. see [uploadManager#upload](#uploadManager:upload) for implement
 - filesize - (*int*) the uploaded file size in byte.
 - state - (*int*) state of the transfer of this instance. value are: 0 (not started), 1 (loading), 2 (aborted), 3 (cancelled), 4 (completed)
 
-# Example
+Example
+-------
 	
 	//CSS
 	
