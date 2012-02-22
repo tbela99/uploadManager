@@ -35,7 +35,7 @@ String.implement({shorten: function (max, end) {
 		hasFileReader = 'FileReader' in window,
 		input = (function () { var input = document.createElement('input'); input.type = 'file'; return input })(),
 		fileproto = window.File ? File.prototype : undef,
-		method = 'mozSlice' in fileproto ? 'mozSlice' : ('webkitSlice' in fileproto ? 'webkitSlice' : ('slice' in fileproto ? 'slice' : false)),
+		method = !fileproto ? false : ('mozSlice' in fileproto ? 'mozSlice' : ('webkitSlice' in fileproto ? 'webkitSlice' : ('slice' in fileproto ? 'slice' : false))),
 		//browser version
 		version = navigator.userAgent.replace(/.*?(Version\/(\S+)|Chrome\/(\S+)|MSIE ([^;\s]+)|Firefox\/(\S+)|Opera Mini\/([^\d.]+)).*?$/, '$2$3$4$5$6').toInt(),
 		brokenSlice = (Browser.chrome && version < 11) || (Browser.firefox && version <= 4),
