@@ -26,6 +26,56 @@ creates and manage uploads with the following features:
 - customizable by css (fully customizable in firefox 4 and later)
 - easy to use
 
+# Example
+	
+	//CSS
+	
+	#dropfiles {
+	
+		border: #000;
+		width: 100%;
+		height: 250px;
+	}
+
+	//HTML
+			<script src="mootools.js"></script>
+			<script type="text/javascript" src="number.js"></script>
+			<script type="text/javascript" src="progressbar.js"></script>
+			<script type="text/javascript" src="upload.js"></script>
+			
+			
+			<a href="#">Select a picture</a>
+			<div id="dropfiles"></div>
+	
+	//Javacript
+
+	window.addEvent('domready', function () {
+		
+		//upload options
+		var options = {
+						//upload container
+						container: 'dropfiles',
+						
+						//only one file can be uploaded
+						limit: 1,
+						
+						//filter by file type
+						filetype: 'jpg,gif,png',
+						
+						//where to send uploaded file
+						base: '/files/upload'
+					}
+					
+		//enable drap & drop
+		uploadManager.attachDragEvents('dropfiles', options);
+		
+		//add a new upload on click on the link right before #dropfiles
+		document.getElement("#dropfiles!+a").addEvent("click", function (e) {
+		
+			e.stop();
+			uploadManager.upload(options)
+		})
+	})
 
 ### uploadManager Property: resume
 
