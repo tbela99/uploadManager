@@ -34,7 +34,8 @@ input { margin: 0; padding: 0; border: 1px }
 <script type="text/javascript">
 
 var win = parent.window,
-	doc = win.document;
+	doc = win.document,
+	Locale = win.Locale;
 
 	String.prototype.shorten =  function (max, end) {
 	
@@ -86,7 +87,7 @@ var win = parent.window,
 	
 	?> $(id + \'_label\').innerHTML = \'\';<?php
 	
-	?>$(id + \'_iframe\').style.display=\'block\'}).cancel(); return false;" class="cancel-upload">Cancel</a>');
+	?>$(id + \'_iframe\').style.display=\'block\'}).cancel(); return false;" class="cancel-upload">' + Locale.get('uploadManager.CANCEL') + '</a>');
 	
 	transfer.fireEvent('failure', transfer).fireEvent('complete', transfer)
 	</script>
@@ -110,9 +111,9 @@ var win = parent.window,
 		options = transfer.options;
 		
 							//file size limit check
-	if(maxsize > 0 && arg.size > maxsize) transfer.cancel('file too large, allowed max size is ' + maxsize.toFileSize());
-	else if(arg.size == 0) transfer.cancel('The selected file is empty');
-	else if(options.filesize > 0 && arg.size > options.filesize) transfer.cancel('file too big (file size must not exceed ' + options.filesize.toFileSize() + ')');
+	if(maxsize > 0 && arg.size > maxsize) transfer.cancel(Locale.get('uploadManager.TOTAL_FILES_SIZE_EXCEEDED', maxsize.toFileSize()));
+	else if(arg.size == 0) transfer.cancel(Locale[get]('uploadManager.EMPTY_FILE'));
+	else if(options.filesize > 0 && arg.size > options.filesize) transfer.cancel(Locale.get('uploadManager.MAX_FILE_SIZE_EXCEEDED', options.filesize.toFileSize()) + ')');
 	else if(options.maxsize > 0 && uploadManager.getSize(options.container) + arg.size > options.maxsize) transfer.cancel('file too big (total files size must not exceed ' + options.maxsize.toFileSize() + ')');			
 	else {
 		
@@ -127,7 +128,7 @@ var win = parent.window,
 		?>, transfer = uploadManager.get(id), iframe = $(id + \'_iframe\'); iframe.set({events: {\'load\': function () { setTimeout(function () { transfer.cancel() }, 10) }}, src: \'<?php 
 		
 			echo uploadHelper::route($self.(strpos($self, '?') === false ? '?' : '&').$f_.'&r='.urlencode(addslashes(uploadHelper::encrypt($file[0]['path'])))); 
-		?>\'}); return false" class="cancel-upload">Cancel</a>').getElement('label').set('text', '<?php 
+		?>\'}); return false" class="cancel-upload">' + Locale.get('uploadManager.CANCEL') + '</a>').getElement('label').set('text', '<?php 
 		
 		echo addslashes($file[0]['name']);
 	?>'.shorten() + ' (' + (<?php 
@@ -180,7 +181,7 @@ var win = parent.window,
 				iframe = win.$(id + '_iframe');
 				iframe.style.display = 'none';
 				
-				div = win.$(id + '_label').set('html', ' uploading, please wait...<a href="<?php 
+				div = win.$(id + '_label').set('html', Locale.get('uploadManager.UPLOADING') + ' <a href="<?php 
 				
 					echo uploadHelper::route('index.php'); 
 				?>" onclick="var id = <?php 
@@ -200,7 +201,7 @@ var win = parent.window,
 					
 				?>}).cancel(); <?php
 					
-					?>return false" class="cancel-upload">Cancel</a>');
+					?>return false" class="cancel-upload">' + Locale.get('uploadManager.CANCEL') + '</a>');
 					
 				document.getElementById('iform').submit()
 			}

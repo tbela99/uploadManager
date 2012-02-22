@@ -403,7 +403,7 @@ String.implement({shorten: function (max, end) {
 				
 					this.addEvent('progress', function (value) {
 					
-						if(progress) progress.setValue(value);
+						if(progress && progress.setValue) progress.setValue(value);
 						
 						if(value == 1) {
 							
