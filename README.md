@@ -20,65 +20,11 @@ creates and manage uploads with the following features:
 - faster upload: each file has multiple chunks uploaded in parallel (Google Chrome, Firefox 3.6+, IE10 Platform preview 2)
 - resume upload on error/pause (Google Chrome, Firefox 4.0+, IE10 Platform preview 2)
 - file drag drop (currently supported by chrome 5+, firefox 3.6+ and safari 5.1+, IE10 Platform preview 2)
-- progress bar for browsers supporting HTML5 File API (chrome5+, safari4+, Firefox 3.6+, IE10 Platform preview 2, Opera 12 (Next))
+- optional progressbar for browsers supporting HTML5 File API (chrome5+, safari4+, Firefox 3.6+, IE10 Platform preview 2, Opera 12 (Next))
 - no input file for Firefox 4+
 - iframe for the others browsers
 - customizable by css (fully customizable in firefox 4 and later)
 - easy to use
-
-# Example
-	
-	//CSS
-	
-	#dropfiles {
-	
-		border: #000;
-		width: 100%;
-		height: 250px;
-	}
-
-	//HTML
-			<script src="mootools.js"></script>
-			<script type="text/javascript" src="number.js"></script>
-			<script type="text/javascript" src="progressbar.js"></script>
-			<script type="text/javascript" src="upload.js"></script>
-			
-			
-			<a href="#">Select a picture</a>
-			<div id="dropfiles"></div>
-	
-	//Javacript
-
-	window.addEvent('domready', function () {
-		
-		//upload options
-		var options = {
-						//upload container
-						container: 'dropfiles',
-						
-						//only one file can be uploaded
-						limit: 1,
-						
-						//upload field name
-						name: 'picture',
-						
-						//filter by file type
-						filetype: 'jpg,gif,png',
-						
-						//where to send uploaded file
-						base: '/files/upload'
-					}
-					
-		//enable drap & drop
-		uploadManager.attachDragEvents('dropfiles', options);
-		
-		//add a new upload on click on the link right before #dropfiles
-		document.getElement("#dropfiles!+a").addEvent("click", function (e) {
-		
-			e.stop();
-			uploadManager.upload(options)
-		})
-	})
 
 ### uploadManager Property: resume
 
@@ -356,6 +302,60 @@ Options, Events. see [uploadManager#upload](#uploadManager:upload) for implement
 - completed - (*boolean*) true if the file has been succesfully uploaded
 - filesize - (*int*) the uploaded file size in byte.
 - state - (*int*) state of the transfer of this instance. value are: 0 (not started), 1 (loading), 2 (aborted), 3 (cancelled), 4 (completed)
+
+# Example
+	
+	//CSS
+	
+	#dropfiles {
+	
+		border: #000;
+		width: 100%;
+		height: 250px;
+	}
+
+	//HTML
+			<script src="mootools.js"></script>
+			<script type="text/javascript" src="number.js"></script>
+			<script type="text/javascript" src="progressbar.js"></script>
+			<script type="text/javascript" src="upload.js"></script>
+			
+			
+			<a href="#">Select a picture</a>
+			<div id="dropfiles"></div>
+	
+	//Javacript
+
+	window.addEvent('domready', function () {
+		
+		//upload options
+		var options = {
+						//upload container
+						container: 'dropfiles',
+						
+						//only one file can be uploaded
+						limit: 1,
+						
+						//upload field name
+						name: 'picture',
+						
+						//filter by file type
+						filetype: 'jpg,gif,png',
+						
+						//where to send uploaded file
+						base: '/files/upload'
+					}
+					
+		//enable drap & drop
+		uploadManager.attachDragEvents('dropfiles', options);
+		
+		//add a new upload on click on the link right before #dropfiles
+		document.getElement("#dropfiles!+a").addEvent("click", function (e) {
+		
+			e.stop();
+			uploadManager.upload(options)
+		})
+	})
 
 
 Example
