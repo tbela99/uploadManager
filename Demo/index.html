@@ -81,6 +81,8 @@ a {
 <script type="text/javascript" src="../number.js"></script>
 <script type="text/javascript" src="../Source/progressbar.js"></script>
 <script type="text/javascript" src="../Source/upload.js"></script>
+<script type="text/javascript" src="../Source/Languages/locale.js"></script>
+<script type="text/javascript" src="../Source/Languages/Locale.en-GB.uploadManager.js"></script>
 <script type="text/javascript">
 
 window.addEvent('domready', function() {
@@ -181,13 +183,13 @@ window.addEvent('domready', function() {
 	if(uploadManager.multiple) {
 	
 		mu = function () { options.multiple = this.checked };
-		$('multiple').addEvents({click: mu, change: mu}).disabled = false;
+		$('multiple').addEvents({click: mu, change: mu, checked: true}).disabled = false;
 	}
 	
 	if(uploadManager.xmlhttpupload) {
 	
-		mu = function () { options.multiple = this.checked };
-		$('multiple').addEvents({click: mu, change: mu}).disabled = false;
+		mu = function () { options.iframe = this.checked };
+		$('iframe').addEvents({click: mu, change: mu}).disabled = false;
 	}
 	
 	if(uploadManager.xmlhttpupload) {
@@ -196,6 +198,7 @@ window.addEvent('domready', function() {
 		$('progressbar').addEvents({click: pr, change: pr}).disabled = false;
 	}
 	
+	//Modernizr.draganddrop && window.FileReader - see https://github.com/Modernizr/Modernizr/issues/57
 	dd.set('text', dd.get('text') + (window.DataTransfer ? ' (Yes!)' : ' ... don\'t know :('));
 	dd.getPrevious().disabled = true;
 	

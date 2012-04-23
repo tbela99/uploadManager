@@ -13,6 +13,8 @@ requires:
   - Fx.Tween
   - Fx.Elements
   - Array
+  more:
+  - Locale
 provides: [uploadManager]
 ...
 */
@@ -32,13 +34,24 @@ String.implement({shorten: function (max, end) {
 "use strict";
 	var store = 'umo',
 		transport = 'upl:tr',
+		Element = window.Element,
+		Locale = window.Locale,
+		addEvent = 'addEvent',
+		addEvents = 'addEvents',
+		append = 'append',
+		element = 'element',
+		fireEvent = 'fireEvent',
+		get = 'get',
+		getElement = 'getElement',
+		getXHR = 'getXHR',
+		setStyle = 'setStyle',
+		toFileSize = 'toFileSize',
 		hasFileReader = 'FileReader' in window,
 		input = (function () { var input = document.createElement('input'); input.type = 'file'; return input })(),
-		fileproto = window.File ? File.prototype : undef,
-		method = !fileproto ? false : ('mozSlice' in fileproto ? 'mozSlice' : ('webkitSlice' in fileproto ? 'webkitSlice' : ('slice' in fileproto ? 'slice' : false))),
+		fileproto = window.File ? File.prototype : {},
+		method = 'mozSlice' in fileproto ? 'mozSlice' : ('webkitSlice' in fileproto ? 'webkitSlice' : ('slice' in fileproto ? 'slice' : false)),
 		//browser version
-		version = navigator.userAgent.replace(/.*?(Version\/(\S+)|Chrome\/(\S+)|MSIE ([^;\s]+)|Firefox\/(\S+)|Opera Mini\/([^\d.]+)).*?$/, '$2$3$4$5$6').toInt(),
-		brokenSlice = (Browser.chrome && version < 11) || (Browser.firefox && version <= 4),
+		brokenSlice = (Browser.chrome && Browser.version < 11) || (Browser.firefox && Browser.version <= 4),
 		
 		uploadManager = window.uploadManager = {
 			
@@ -73,7 +86,7 @@ String.implement({shorten: function (max, end) {
 			
 			attachDragEvents: function (el, options) {
 			
-				$(el).addEvents(dragdrop).store(store, options).grab(new Element('div[text=Drop files here][style=display:none][class=drop-upload]'), 'top');								
+				$(el)[addEvents](dragdrop).store(store, options).grab(new Element('div[style=display:none][class=drop-upload]', {text: Locale[get]('uploadManager.DROP_FILE_HERE') }), 'top');								
 				return this
 			},
 
@@ -91,7 +104,7 @@ String.implement({shorten: function (max, end) {
 
 			upload: function(options) {
 			
-				var opt = Object.append({limit: 0, filesize: 0, maxsize: 0, progressbar: true/*, resume: false, iframe: false */}, options),
+				var opt = Object[append]({limit: 0, filesize: 0, maxsize: 0, progressbar: true/*, resume: false, iframe: false */}, options),
 					container = opt.container,
 					transfer;
 				
@@ -109,6 +122,8 @@ String.implement({shorten: function (max, end) {
 				opt.id =  opt.name.replace(/[^a-z0-9]/gi, '') + Date.now();
 				
 				if(opt.iframe || !this.xmlhttpupload) transfer = new Transfert(opt);
+				
+				//opera does not yet support chunck file upload
 				else if(this.resume && !Browser.opera) transfer = new HTML5MultipartTransfert(opt);
 				else transfer = new HTML5Transfert(opt);
 			
@@ -191,12 +206,12 @@ String.implement({shorten: function (max, end) {
 			
 				e.stop();
 				
-				var el = this, options = Object.append({}, el.retrieve(store), {hideDialog: true}), transfer;
+				var el = this, options = Object[append]({}, el.retrieve(store), {hideDialog: true}), transfer;
 
 				el.getFirst().style.display = 'none';
 				if(e.event.dataTransfer) Array.from(e.event.dataTransfer.files).each(function (f) { 
 				
-						transfer = uploadManager.upload(Object.append({}, options));
+						transfer = uploadManager.upload(Object[append]({}, options));
 						if(transfer) transfer.load(f)
 				})
 			}
@@ -210,17 +225,17 @@ String.implement({shorten: function (max, end) {
 			initialize: function(options) {
 
 				//file type filter
-				if(options.filetype) this.addEvent('load',	function (object) { 
+				if(options.filetype) this[addEvent]('load',	function (object) { 
 					
 					var matches = options.filetype.split(/[^a-z0-9]/i); 
 						
 					if(!this.aborted && matches.length > 0) this.aborted = !new RegExp('(\.' + matches.join(')$|(\.') + '$)', 'i').test(object.file);
-					if(this.aborted) this.message = 'unauthorized file type'
+					if(this.aborted) this.message = Locale[get]('uploadManager.UNAUTHORIZED_FILE_TYPE')
 				});
 					
 				var element, container = options.container;
 					
-				this.addEvents({
+				this[addEvents]({
 		
 						abort: function () { this.state = 2 },
 						load: function () { uploadManager.actives[container].push(this) },
@@ -240,7 +255,7 @@ String.implement({shorten: function (max, end) {
 								
 								if(size > options.maxsize) {
 								
-									this.message = 'file too big (total file size must not exceed ' + options.maxsize.toFileSize() + ')';
+									this.message = Locale[get]('uploadManager.TOTAL_FILES_SIZE_EXCEEDED', options.maxsize[toFileSize]());
 									this.cancel()
 								}
 							}
@@ -272,7 +287,7 @@ String.implement({shorten: function (max, end) {
 							if(uploadManager.actives[container].length == 0 && uploadManager.queue[container].length == 0) {
 							
 								uploadManager.active = false;
-								this.fireEvent('allComplete', container) 
+								this[fireEvent]('allComplete', container) 
 							}
 							else if(uploadManager.enqueue) {
 							
@@ -284,40 +299,40 @@ String.implement({shorten: function (max, end) {
 				
 				element = this.createElement(options);
 				
-				this.checkbox = element.getElement('#' + options.id).store(transport, this);			
-				element.getElement('a.cancel-upload').addEvent("click", function(e) { 
+				this.checkbox = element[getElement]('#' + options.id).store(transport, this);			
+				element[getElement]('a.cancel-upload')[addEvent]("click", function(e) { 
 						
 					e.stop(); 
 					this.cancel() 
 					
 				}.bind(this));
-				this.fireEvent('create', this)
+				this[fireEvent]('create', this)
 			},
 			
 			createElement: function (options) {
 			
-				this.element = new Element('div', {'class': 'upload-container',
+				this[element] = new Element('div', {'class': 'upload-container',
 								html: '<iframe id="' + options.id + '_iframe" src="' + options.base + ( options.base.indexOf('?') == -1 ? '?' : '&') + options.id + '" frameborder="no" scrolling="no" style="border:0;overflow:hidden;padding:0;display:block;float:left;height:20px;width:228px; "></iframe>'
 								+ '<input type="checkbox" disabled="disabled" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
 								+ '<input type="checkbox" disabled="disabled" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
-								+ '<span class="upload-span" id="' + options.id + '_label"><a class="cancel-upload" href="' + options.base + '">Cancel</a></span>'
+								+ '<span class="upload-span" id="' + options.id + '_label"><a class="cancel-upload" href="' + options.base + '">' + Locale[get]('uploadManager.CANCEL') + '</a></span>'
 							}).inject(options.container);
 					
-				return this.element
+				return this[element]
 			},
 			
-			toElement: function () { return this.element },
+			toElement: function () { return this[element] },
 			
 			load: function (file) {
 			
 				this.state = 1;
 				this.aborted = false; 
-				this.fireEvent('load', {element: this.element, file: file, size: 0, transfer: this});
+				this[fireEvent]('load', {element: this[element], file: file, size: 0, transfer: this});
 				
 				if(this.aborted) {
 				
 					this.state = 2;
-					this.fireEvent('abort', {file: file, message: this.message || '', transfer: this})
+					this[fireEvent]('abort', {file: file, message: this.message || '', transfer: this})
 				}
 				
 				delete this.message;
@@ -330,10 +345,10 @@ String.implement({shorten: function (max, end) {
 				
 				if(message) this.message = message;
 				
-				this.fireEvent('cancel', this);
-				if(complete) this.fireEvent('complete', this);
+				this[fireEvent]('cancel', this);
+				if(complete) this[fireEvent]('complete', this);
 				delete this.message;
-				this.element.destroy()
+				this[element].destroy()
 			},
 			
 			Implements: [Options, Events]
@@ -350,7 +365,7 @@ String.implement({shorten: function (max, end) {
 					//file size limit check
 					if(obj.size == 0) {
 					
-						this.message = 'The selected file is empty';
+						this.message = Locale[get]('uploadManager.EMPTY_FILE')
 						this.aborted = true
 					}
 					
@@ -358,13 +373,13 @@ String.implement({shorten: function (max, end) {
 					else if(options.filesize > 0 && obj.size > options.filesize) {
 					
 						this.aborted = true;
-						this.message = 'file too big (file size must not exceed ' + options.filesize.toFileSize() + ')'
+						this.message = Locale[get]('uploadManager.MAX_FILE_SIZE_EXCEEDED', options.filesize[toFileSize]())
 					}
 					
 					else if(options.maxsize > 0 && uploadManager.getSize(options.container) + obj.size > options.maxsize) {
 					
 						this.aborted = true;
-						this.message = 'file too big (total file size must not exceed ' + options.maxsize.toFileSize() + ')'
+						this.message = Locale[get]('uploadManager.TOTAL_FILES_SIZE_EXCEEDED', options.maxsize[toFileSize]())
 					}
 				}
 			},
@@ -374,7 +389,7 @@ String.implement({shorten: function (max, end) {
 				fn = fn.bind(this);
 				if(obj.addEventListener) obj.addEventListener(event, fn, false);
 				
-				//drop this line ? probably not needed
+				//IE 7 - 8
 				else obj['on' + event] = fn;
 				return this
 			},
@@ -382,11 +397,11 @@ String.implement({shorten: function (max, end) {
 			load: function (file) {
 				
 				this.aborted = false;
-				this.fireEvent('load', {element: this.element, file: file.name, size: file.size, transfer: this});
+				this[fireEvent]('load', {element: this[element], file: file.name, size: file.size, transfer: this});
 				
 				if(this.aborted) {
 				
-					this.fireEvent('abort', {file: file, message: this.message || '', transfer: this});
+					this[fireEvent]('abort', {file: file, message: this.message || '', transfer: this});
 					delete this.message;
 					this.cancel();
 					return this
@@ -396,27 +411,32 @@ String.implement({shorten: function (max, end) {
 				this.size = file.size;
 				this.filename = file.name;
 				
-				var first = this.element.getFirst('.upload-progress'),
-					span = first.getElement('span').setStyle('display', 'none'),
-					field = span.getNext().setStyle('display', 'none'),
+				var first = this[element].getFirst('.upload-progress'),
+					span = first[getElement]('span')[setStyle]('display', 'none'),
+					field = span.getNext()[setStyle]('display', 'none'),
 					progress;
 				
-					this.addEvent('progress', function (value) {
+					this[addEvent]('progress', function (value) {
 					
 						if(progress && progress.setValue) progress.setValue(value);
 						
 						if(value == 1) {
 							
-							field.getElement('label').set({text: this.filename.shorten() + ' (' + this.size.toFileSize() + ')', title: this.filename});
+							field[getElement]('label').set({text: this.filename.shorten() + ' (' + this.size[toFileSize]() + ')', title: this.filename});
 							field.style.display = ''
 						}
-						
 					});
 					
-				if(this.options.progressbar) progress = new ProgressBar(Object.append({
+				if(this.options.progressbar) progress = new ProgressBar(Object[append]({
 						
 						container: first.set('title', file.name),
-						text: file.name.shorten(),
+						text: file.name.shorten()
+						
+					}, typeof this.options.progressbar == 'object' ? this.options.progressbar : {}))[addEvents]({
+						change: function () {
+					
+							first.set('title', file.name + ' (' + (this.value * 100).format() + '%)')
+						},
 						onComplete: function () {
 						
 							progress = progress.toElement();
@@ -424,15 +444,11 @@ String.implement({shorten: function (max, end) {
 							
 							(function () { progress.destroy() }).delay(50)
 						}
-						
-					}, typeof this.options.progressbar == 'object' ? this.options.progressbar : {})).addEvent('change', function () {
-					
-						first.set('title', file.name + ' (' + (this.value * 100).format() + '%)')
 					});
 					
 				field.getFirst().style.display = 'none';
 				
-				this.element.getElement('input[type=file]').destroy();	
+				this[element][getElement]('input[type=file]').destroy();	
 				
 				span.destroy();
 				uploadManager.push(this.options.container, function () {
@@ -446,15 +462,15 @@ String.implement({shorten: function (max, end) {
 			},
 			createElement: function (options) {
 			
-				var input = this.createHTML(options).getElement('input[type=file]').addEvent('change', function (e) {
+				var input = this.createHTML(options)[getElement]('input[type=file]')[addEvent]('change', function (e) {
 				
-					var files = Array.from(e.target.files), op = Object.append({}, options, {hideDialog: true}), transfer;
+					var files = Array.from(e.target.files), op = Object[append]({}, options, {hideDialog: true}), transfer;
 					
 					this.load(files.shift());
 					
 					files.each(function (f) { 
 					
-						transfer = uploadManager.upload(Object.append({}, op));
+						transfer = uploadManager.upload(Object[append]({}, op));
 						if(transfer) transfer.load(f)
 					})
 					
@@ -462,29 +478,29 @@ String.implement({shorten: function (max, end) {
 								
 				if(Browser.name == 'firefox' && Browser.version >= 4) {
 				
-					new Element('a', {text: 'Browse...', 'class': 'browse-upload', href: '#', events: {click: function (e) { e.stop(); input.click() }}}).inject(input.setStyle('display', 'none'), 'before');
+					new Element('a', {text: Locale[get]('uploadManager.BROWSE'), 'class': 'browse-upload', href: '#', events: {click: function (e) { e.stop(); input.click() }}}).inject(input[setStyle]('display', 'none'), 'before');
 					if(!this.options.hideDialog) input.click.delay(10, input)
 				}
 						
-				return this.addEvent('abort', function () { input.value = '' }).element
+				return this[addEvent]('abort', function () { input.value = '' })[element]
 			}
 		},
 		
-		HTML5Transfert = new Class(Object.append({
+		HTML5Transfert = new Class(Object[append]({
 		
 			Extends: Transfert,
 			running: false,
 			ready: false,
 			initialize: function(options) {
 					
-				this.addEvents(this.events).addEvents({
+				this[addEvents](this.events)[addEvents]({
 				
 					success: function (json) { 
 					
 						var remove = json.remove;
 						delete json.remove;
 						
-						this.addEvent('cancel', function () {
+						this[addEvent]('cancel', function () {
 						
 							var xhr = new XMLHttpRequest();
 							
@@ -499,13 +515,13 @@ String.implement({shorten: function (max, end) {
 						if(this.running) {
 						
 							this.xhr.abort();
-							this.getXHR().running = false
+							this[getXHR]().running = false
 						}
 					}
 								
 				}).parent(options);
 					
-				this.getXHR().binary = !!this.xhr.sendAsBinary;
+				this[getXHR]().binary = !!this.xhr.sendAsBinary;
 						
 				if(hasFileReader) {
 				
@@ -518,22 +534,21 @@ String.implement({shorten: function (max, end) {
 					})
 				}
 			},
-			
 			getXHR: function () {
 			
 				var xhr = this.xhr = new XMLHttpRequest(),
 					options = this.options;
 				
-				this.add(xhr.upload, 'progress', function(e) { if (e.lengthComputable) this.fireEvent('progress', e.loaded / e.total) }).						
+				this.add(xhr.upload, 'progress', function(e) { if (e.lengthComputable) this[fireEvent]('progress', e.loaded / e.total) }).						
 					add(xhr, 'load', function() {
 
 						if(xhr.status == 0) {
 						
-							this.element.getElement('.resume-upload').style.display = '';
+							this[element][getElement]('.resume-upload').style.display = '';
 							return
 						}
 						
-						var	self = this.fireEvent('progress', 1),
+						var	self = this[fireEvent]('progress', 1),
 							options = this.options;
 								
 						var status, json, event = 'success';
@@ -548,49 +563,47 @@ String.implement({shorten: function (max, end) {
 							
 								json = JSON.decode(xhr.responseText);
 								json.transfer = this;
-								json.element = this.element;						
+								json[element] = this[element];						
 								if(json.size != this.size) event = 'failure'
 							}					
 							catch(e) { event = 'failure' }
 							
 						} else event = 'failure';
 						
-						this.fireEvent(event, event == 'failure' ? this : json).fireEvent('complete', this);
+						this[fireEvent](event, event == 'failure' ? this : json)[fireEvent]('complete', this);
 
-						if(json.size == 0) this.cancel('The selected file is empty');
-						else if(options.filesize > 0 && json.size > options.filesize) this.cancel('file too big (file size must not exceed ' + options.filesize.toFileSize() + ')');
-						else if(options.maxsize > 0 && uploadManager.getSize(options.container) > options.maxsize) this.cancel('file too big (total files size must not exceed ' + options.maxsize.toFileSize() + ')')						
+						if(json.size == 0) this.cancel(Locale[get]('uploadManager.EMPTY_FILE'));
+						else if(options.filesize > 0 && json.size > options.filesize) this.cancel(Locale[get]('uploadManager.MAX_FILE_SIZE_EXCEEDED', options.filesize[toFileSize]()));
+						else if(options.maxsize > 0 && uploadManager.getSize(options.container) > options.maxsize) this.cancel(Locale[get]('uploadManager.TOTAL_FILES_SIZE_EXCEEDED', options.maxsize[toFileSize]()))						
 					}).
 					add(xhr, 'abort', this.resume).
 					add(xhr, 'error', this.resume);
 					
 				return this		
 			},
-			
 			resume: function () {
 			
-				this.element.getElement('.resume-upload').style.display = ''
+				this[element][getElement]('.resume-upload').style.display = ''
 			},
-			
 			createHTML: function (options) {
 			
-				this.element = new Element('div', {
+				this[element] = new Element('div', {
 						'class': 'upload-container',
 						html: '<div style="display:inline-block;padding:3px" class="upload-progress"><span style="display:none">&nbsp;</span><span><input id="' + options.id + '_input" type="file" name="' + options.id + '_input"' + (options.multiple ? ' multiple="multiple"' : '') + '/>'
 						+ '<input type="checkbox" disabled="disabled" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
 						+ '<input type="checkbox" disabled="disabled" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
 						+ '<label for="'+ options.id + '"></label>'
-						+ '</span></div><a class="cancel-upload" href="' + options.base + '">Cancel</a><a class="resume-upload" style="display:none" href="' + options.base + '">Retry</a>'
+						+ '</span></div><a class="cancel-upload" href="' + options.base + '">' + Locale[get]('uploadManager.CANCEL') + '</a><a class="resume-upload" style="display:none" href="' + options.base + '">' + Locale[get]('uploadManager.RETRY') + '</a>'
 					}).inject(options.container);
 					
-				this.element.getLast().addEvent('click', function (e) {
+				this[element].getLast()[addEvent]('click', function (e) {
 				
 					e.stop();
 					this.initUpload()
 					
 				}.bind(this));
 				
-				return this.element
+				return this[element]
 			},
 			
 			//this launch the transfer, to retry after a failure, just call it again
@@ -599,7 +612,7 @@ String.implement({shorten: function (max, end) {
 				var xhr = this.xhr;
 				
 				this.running = true;
-				this.element.getElement('.resume-upload').style.display = 'none';
+				this[element][getElement]('.resume-upload').style.display = 'none';
 				
 				xhr.open('POST', this.options.base, true);
 				xhr.setRequestHeader('Size', this.size);
@@ -610,7 +623,6 @@ String.implement({shorten: function (max, end) {
 				if(this.binary) xhr.sendAsBinary(this.bin);
 				else xhr.send(this.file)
 			},
-			
 			upload: function () {
 
 				if(this.reader) {
@@ -625,7 +637,7 @@ String.implement({shorten: function (max, end) {
 		
 			faster upload with multipart transfert or resume on error with multiple chunk transfert ? both!
 		*/
-		HTML5MultipartTransfert = new Class(Object.append({
+		HTML5MultipartTransfert = new Class(Object[append]({
 		
 			Extends: Transfert,
 			
@@ -642,7 +654,7 @@ String.implement({shorten: function (max, end) {
 			},
 			initialize: function(options) {
 				
-				this.addEvents(this.events).addEvents({
+				this[addEvents](this.events)[addEvents]({
 				
 					load: function (file) {
 					
@@ -668,26 +680,27 @@ String.implement({shorten: function (max, end) {
 					
 					failure: function () {
 					
-						this.element.getElement('.pause-upload').set('text', 'Resume').style.display = ''
+						this[element][getElement]('.pause-upload').set('text', Locale[get]('uploadManager.RESUME')).style.display = ''
 					}
 								
 				}).parent(options)
 			},
 			createHTML: function (options) {
 			
-				this.element = new Element('div', {
+				this[element] = new Element('div', {
 						'class': 'upload-container',
 						html: '<div style="display:inline-block;padding:3px" class="upload-progress"><span style="display:none">&nbsp;</span><span><input id="' + options.id + '_input" type="file" name="' + options.id + '_input"' + (options.multiple ? ' multiple="multiple"' : '') + '/>'
 						+ '<input type="checkbox" disabled="disabled" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
 						+ '<input type="checkbox" disabled="disabled" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
+						+ '<input type="checkbox" disabled="disabled" style="display:none" name="guid_' + options.name + '" id="'+ options.id + '_gfile"/>'
 						+ '<label for="'+ options.id + '"></label>'
-						+ '</span></div><a class="cancel-upload" href="' + options.base + '">Cancel</a><a class="pause-upload" style="display:none" href="' + options.base + '">Pause</a>'
+						+ '</span></div><a class="cancel-upload" href="' + options.base + '">' + Locale[get]('uploadManager.CANCEL') + '</a><a class="pause-upload" style="display:none" href="' + options.base + '">' + Locale[get]('uploadManager.PAUSE') + '</a>'
 					}).inject(options.container);
 					
-				var pause = this.addEvents({load: function () { if(this.options.pause) pause.style.display = '' }, success: function () {
+				var pause = this[addEvents]({load: function () { if(this.options.pause) pause.style.display = '' }, success: function () {
 				
 					pause.destroy()
-				}}).element.getLast('.pause-upload').addEvent('click', function (e) {
+				}})[element].getLast('.pause-upload')[addEvent]('click', function (e) {
 			
 					e.stop();
 					
@@ -695,37 +708,33 @@ String.implement({shorten: function (max, end) {
 					
 				}.bind(this));
 					
-				return this.element
+				return this[element]
 			},
-			
 			pause: function () {
 
 				this.paused = true;
-				this.element.getElement('.pause-upload').addClass('resume-upload').set('text', 'Resume').style.display = '';
-				this.fireEvent('pause', this)
+				this[element][getElement]('.pause-upload').addClass('resume-upload').set('text', Locale[get]('uploadManager.RESUME')).style.display = '';
+				this[fireEvent]('pause', this)
 			},
-			
 			resume: function () {
 
 				this.paused = false;
 				this.failed = 0;
-				this.element.getElement('.pause-upload').removeClass('resume-upload').set('text', 'Pause').style.display = this.options.pause ? '' : 'none';
-				this.fireEvent('resume', this).upload()
+				this[element][getElement]('.pause-upload').removeClass('resume-upload').set('text', Locale[get]('uploadManager.PAUSE')).style.display = this.options.pause ? '' : 'none';
+				this[fireEvent]('resume', this).upload()
 			},
-			
 			failure: function () {
 		
 				this.failed++;
 				if(this.failed >= this.active) this.pause()
 			},
-			
 			getXHR: function (properties, headers, progress) {
 			
 				var xhr = new XMLHttpRequest(), property;
 				
 				if(progress) this.add(xhr.upload, 'progress', progress);
 				
-				properties = Object.append({error: this.failure, abort: this.failure}, properties);
+				properties = Object[append]({error: this.failure, abort: this.failure}, properties);
 				
 				for(property in properties) if(properties.hasOwnProperty(property)) this.add(xhr, property, properties[property]);
 				
@@ -764,7 +773,7 @@ String.implement({shorten: function (max, end) {
 			
 				if(upload.loaded < upload.blob.size) headers.Partial = 1;
 				
-				xhr = this.uploads[index].xhr = this.getXHR({
+				xhr = this.uploads[index].xhr = this[getXHR]({
 				
 					load: function() {
 
@@ -799,16 +808,15 @@ String.implement({shorten: function (max, end) {
 										else {
 										
 											//failure for some reason
-											this.message = 'Uploaded file has been corrupted';
+											this.message = Locale[get]('uploadManager.FILE_CORRUPTED');
 											this.failure()
 										}
 									}		
 						
 									else {
-									
-										
+																			
 										json.transfer = this;
-										json.element = this.element;
+										json[element] = this[element];
 										if(json.message) this.message = json.message;
 										
 										if(json.success) {
@@ -828,11 +836,11 @@ String.implement({shorten: function (max, end) {
 											if(this.size > this.loaded) this.upload();
 											else if(this.size == this.loaded) {
 												
-												var self = this.fireEvent('progress', 1),
+												var self = this[fireEvent]('progress', 1),
 													options = this.options;
 														
 												json.size = this.size;
-												this.fireEvent('success', json).fireEvent('complete', this)
+												this[fireEvent]('success', json)[fireEvent]('complete', this)
 											}
 										}
 									}
@@ -844,7 +852,7 @@ String.implement({shorten: function (max, end) {
 						}
 					},
 					headers,
-					function(e) { if (e.lengthComputable) this.fireEvent('progress', (e.loaded + this.loaded + this.partial) / this.size) }
+					function(e) { if (e.lengthComputable) this[fireEvent]('progress', (e.loaded + this.loaded + this.partial) / this.size) }
 				);
 				
 				xhr.send(this.uploads[index].blob[method](this.uploads[index].loaded, offset))
@@ -853,7 +861,7 @@ String.implement({shorten: function (max, end) {
 		
 				if(this.uploads[index] && this.uploads[index].xhr) return;
 				
-				var xhr = this.getXHR({
+				var xhr = this[getXHR]({
 				
 						error: this.pause,
 						abort: this.pause,
@@ -872,7 +880,7 @@ String.implement({shorten: function (max, end) {
 									//failed for some reasons
 									if(!json.success) {
 										
-										this.message = 'Failed to prefetch file infos';
+										this.message = Locale[get]('uploadManager.PREFETCH_FAILED');
 										this.failure();
 										return
 									}
@@ -882,7 +890,7 @@ String.implement({shorten: function (max, end) {
 								}					
 								catch(e) { 
 								
-									this.message = 'Failed to prefetch file infos';
+									this.message = Locale[get]('uploadManager.PREFETCH_FAILED');
 									this.failure()
 								}
 							}
@@ -900,7 +908,7 @@ String.implement({shorten: function (max, end) {
 			},
 			createGuid: function () {
 			
-				var xhr = this.getXHR({
+				var xhr = this[getXHR]({
 				
 						error: this.pause,
 						abort: this.pause,
@@ -919,17 +927,18 @@ String.implement({shorten: function (max, end) {
 									//failed for some reasons
 									if(!json.success) {
 										
-										this.message = 'Failed to prefetch file infos';
+										this.message = Locale[get]('uploadManager.PREFETCH_FAILED');
 										this.failure();
 										return
 									}
 									
 									this.guid = json.guid;
+									this[element][getElement]('input[name^=guid_]').value = json.guid;
 									this.upload()
 								}					
 								catch(e) { 
 								
-									this.message = 'Failed to prefetch file infos';
+									this.message = Locale[get]('uploadManager.PREFETCH_FAILED');
 									this.failure()
 								}
 							}
@@ -976,6 +985,6 @@ String.implement({shorten: function (max, end) {
 			
 		}, HTML5));
 		
-		Object.append(Element.NativeEvents, {dragenter: 2, dragexit: 2, dragover: 2, drop: 2});
+		Object[append](Element.NativeEvents, {dragenter: 2, dragexit: 2, dragover: 2, drop: 2});
 		
 })(document.id, this);

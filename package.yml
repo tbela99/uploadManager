@@ -3,4 +3,9 @@ author: tbela99
 category: Utilities
 tags: [file, upload, html5, ajax]
 demo: http://tbela.fragged.org/demos/upload/Demo/
-current: 1.4.2
+current: 1.4.3
+sources:
+  - "number.js"
+  - "Source/progressbar.js"
+  - "Source/upload.js"
+  - "Source/Languages/Locale.en-US.uploadManager.js"

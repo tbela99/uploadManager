@@ -17,6 +17,7 @@ for a detailed usage see [HOWTO.md](https://github.com/tbela99/uploadManager/blo
 
 creates and manage uploads with the following features:
 
+- easy to use
 - faster upload: each file has multiple chunks uploaded in parallel (Google Chrome, Firefox 3.6+, IE10 Platform preview 2)
 - resume upload on error/pause (Google Chrome, Firefox 4.0+, IE10 Platform preview 2)
 - file drag drop (currently supported by chrome 5+, firefox 3.6+ and safari 5.1+, IE10 Platform preview 2)
@@ -24,7 +25,7 @@ creates and manage uploads with the following features:
 - no input file for Firefox 4+
 - iframe for the others browsers
 - customizable by css (fully customizable in firefox 4 and later)
-- easy to use
+- supports localization
 
 ### uploadManager Property: resume
 
@@ -49,7 +50,7 @@ creates and manage uploads with the following features:
 ### uploadManager Method: upload {#uploadManager:upload}
 ------------
 
-create a new upload field.
+create a new upload field in a given container.
 
 ### Returns:
 
@@ -70,10 +71,12 @@ create a new upload field.
 - filesize - (*int*, optional) maximum size of a file the user can upload. 0 means no restriction. default to 0.
 - maxsize - (*int*, optional) maximum size of files uploaded by a user. 0 means no restriction. default to 0.
 - iframe - (*boolean*, optional) force iframe upload.
-- multiple - (*boolean*, optional) enable multiple file selection for the input if the browser can handle it.
+- multiple - (*boolean*, optional) enable multiple file selection if the browser can handle it.
 - filetype - (*string*, optional) authorized file type.
 - name - (*string*) name of the upload form field. it contains the original name of the file sent by the user. if the upload succeed a hidden field named *'file_' + name* and containing the encrypted file path on the server will be pushed into the form.
 for example if our form field is named *name[]*, then *name[]* will contains the original file name and *file_name[]* will contains the encrypted file path on the server.
+In addition if you use chunk upload, another input field prefixed by *guid_* will be pushed in the form. this allow you to remove temporary files from the server after the user send the form.
+for example, if your input field name is *name[]*, this field will be named *guid_name[]*.
 - progressbar - (*mixed*, optional) indicates whether to display a progressbar or not. if *false* then the progressbar is disabled. if *true* the progressbar will use default options. if it is an *object*, it will be passed as progressbar options. see [Progressbar](http://github.com/tbela99/progressbar/)
 - hideDialog - (*boolean*, optional) Firefox 4+ only: if true the file selection dialog will not be shown after the upload instance is created.
 
@@ -354,7 +357,19 @@ Example
 		document.getElement("#dropfiles!+a").addEvent("click", function (e) {
 		
 			e.stop();
-			uploadManager.upload(options)
+			var transfer = uploadManager.upload(options);
+			
+			if(transfer) {
+			
+				//add ui elements
+				transfer.toElement().grab(new Element('span[text=UI element]'));
+				
+				//do stuff
+				transfer.addEvent('allComplete', function () {
+				
+					alert('Yay!')
+				})
+			}
 		})
 	})
 
@@ -430,6 +445,7 @@ a simple form to upload a text file.
 			}
 			
 			//all transfers have completed succesfully, submit the form
+			alert('Yay!');
 			
 			//this.submit()			
 		})
