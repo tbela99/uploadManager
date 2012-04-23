@@ -13,7 +13,8 @@ requires:
   - Fx.Tween
   - Fx.Elements
   - Array
-  more:
+  
+  more:1.3:
   - Locale
 provides: [uploadManager]
 ...
