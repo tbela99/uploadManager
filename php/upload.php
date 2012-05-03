@@ -11,6 +11,9 @@
 	
 	header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 	header("Expires: Mon, 26 Jul 1997 05:00:00 GMT"); // Date du passé
+	
+	if(function_exists('mb_internal_encoding'))
+		mb_internal_encoding('utf-8');
 
 	if(!defined('DS'))
 		define('DS', DIRECTORY_SEPARATOR);

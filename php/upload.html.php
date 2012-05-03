@@ -19,12 +19,13 @@
 
 	parse_str($_SERVER['QUERY_STRING'], $match);
 
-	$f_ = uploadHelper::safe_name(array_pop(array_keys($match)));
+	$keys = array_keys($match);
+	$f_ = uploadHelper::safe_name(array_pop($keys));
 	$f = "'".$f_."'";
  
  ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head><meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Document sans titre</title>
 <style type="text/css">
 body { padding: 0; margin: 0 0 0 2px; margin: 0; background: transparent }
@@ -64,7 +65,7 @@ var win = parent.window,
  	
 	uploadHelper::checkToken() or die( 'Invalid Token' );
 	
-	header('content-type: text/html');
+	header('content-type: text/html;charset=utf-8');
 	
 	//if custom header => html5 file upload
   
@@ -101,7 +102,7 @@ var win = parent.window,
 		
 	?><script type="text/javascript">
 	
-	var file = '<?php echo addslashes($file[0]['name']) ?>',
+	var file = '<?php echo uploadHelper::clean(addslashes($file[0]['name'])) ?>',
 		path = '<?php echo addslashes(uploadHelper::encrypt($file[0]['path'])); ?>',
 		id = <?php echo $f; ?>,
 		uploadManager = win.uploadManager,
@@ -156,57 +157,57 @@ var win = parent.window,
 				chmod(TEMP_PATH.DS.basename($r), 0777);
 				unlink(TEMP_PATH.DS.basename($r));
 			}
-	  }
+		}
 	  
   ?><script type="text/javascript">
   
-  function upload(file){
+		function upload(file) {
 
-	var uploadManager = win.uploadManager,
-		id = <?php  
-		
-			echo $f; 
-		?>,
-		transfer = uploadManager.get(id),
-		container = transfer.options.container;
-		
-		uploadManager.push(container, function () {
-		
-			var transfer = win.uploadManager.get(id).load(file);
+			var uploadManager = win.uploadManager,
+				id = <?php  
+				
+					echo $f; 
+				?>,
+				transfer = uploadManager.get(id),
+				container = transfer.options.container;
 			
-			if(transfer.aborted) document.getElementById('file').value = '';
-			else {
+			uploadManager.push(container, function () {
+			
+				var transfer = win.uploadManager.get(id).load(file);
 				
-				// hide old iframe
-				iframe = win.$(id + '_iframe');
-				iframe.style.display = 'none';
-				
-				div = win.$(id + '_label').set('html', Locale.get('uploadManager.UPLOADING') + ' <a href="<?php 
-				
-					echo uploadHelper::route('index.php'); 
-				?>" onclick="var id = <?php 
-				
-					echo addslashes($f); 
-				?>; uploadManager.get(<?php 
-				
-					echo addslashes($f); 
-				?>).addEvent(\'onCancel\', function () {<?php
-				
-					?> $(id + \'_lfile\').value = \'\'; $(id).value = \'\'; $(id + \'_label\').innerHTML = \'\';  $(<?php 
+				if(transfer.aborted) document.getElementById('file').value = '';
+				else {
+					
+					// hide old iframe
+					iframe = win.$(id + '_iframe');
+					iframe.style.display = 'none';
+					
+					div = win.$(id + '_label').set('html', Locale.get('uploadManager.UPLOADING') + ' <a href="<?php 
+					
+						echo uploadHelper::route('index.php'); 
+					?>" onclick="var id = <?php 
 					
 						echo addslashes($f); 
-					?> + \'_iframe\').src=$(id + \'_iframe\').src.replace(/&.*$/, \'\');<?php
+					?>; uploadManager.get(<?php 
+					
+						echo addslashes($f); 
+					?>).addEvent(\'onCancel\', function () {<?php
+					
+						?> $(id + \'_lfile\').value = \'\'; $(id).value = \'\'; $(id + \'_label\').innerHTML = \'\';  $(<?php 
+						
+							echo addslashes($f); 
+						?> + \'_iframe\').src=$(id + \'_iframe\').src.replace(/&.*$/, \'\');<?php
 
-					?>$(id + \'_iframe\').setStyle(\'display\', \'block\');<?php
-					
-				?>}).cancel(); <?php
-					
-					?>return false" class="cancel-upload">' + Locale.get('uploadManager.CANCEL') + '</a>');
-					
-				document.getElementById('iform').submit()
-			}
-		})
- }
+						?>$(id + \'_iframe\').setStyle(\'display\', \'block\');<?php
+						
+					?>}).cancel(); <?php
+						
+						?>return false" class="cancel-upload">' + Locale.get('uploadManager.CANCEL') + '</a>');
+						
+					document.getElementById('iform').submit()
+				}
+			})
+		}
  
 </script>
 <form name="iform" id="iform" action="" method="post" enctype="multipart/form-data">

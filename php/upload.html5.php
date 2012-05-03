@@ -18,7 +18,7 @@
 	
 	if($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-		header('Content-Type: application/x-json');
+		header('Content-Type: application/x-json;charset=utf-8');
 		
 		//the actual maximum file size is post_max_size and not upload_max_size, fix this ?
 		if(empty($headers['Size'])) {

@@ -40,6 +40,25 @@
 		protected $key_field;
 		protected $sub_dir_path;
 		protected $dir_path;
+		
+		protected static $filter = array(
+							'A' => 'À|Á|Â|Ã|Ä|Å',
+							'C' => 'Ç',
+							'E' => 'È|É|Ê|Ë',
+							'I' => 'Ì|Í|Î|Ï',
+							'N' => 'Ñ',
+							'O' => 'Ò|Ó|Ô|Õ|Ö',
+							'U' => 'Ù|Ú|Û|Ü',
+							'Y' => 'Ý',
+							'a' => 'à|á|â|ã|ä|å',
+							'c' => 'ç',
+							'e' => 'è|é|ê|ë',
+							'i' => 'ì|í|î|ï',
+							'n' => 'ñ',
+							'o' => 'ò|ó|ô|õ|ö',
+							'u' => 'ù|ú|û|ü',
+							'y' => 'ý|ÿ'
+						);
 				
 		//generate guid
 		public static function uuid() {
@@ -57,6 +76,14 @@
 			   mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535) // 48 bits for "node" 
 		   ); 
 		}
+		
+		public static function clean($string) {
+		
+			foreach(self::$filter as $value => $regExp)
+				$string = preg_replace('#('.$regExp.')#Us', $value, $string);
+			
+			return $string;
+		}
 			
 		 /**
 		  * file name without extension
@@ -64,7 +91,7 @@
 		  * @param string $file
 		  * @return string
 		  */
-		static function file_name($file) { return preg_replace('/(\.[^\.]+){1,2}$/', '', basename($file)); }
+		public static function file_name($file) { return preg_replace('/(\.[^\.]+){1,2}$/', '', self::clean(basename($file))); }
 	
 		/**
 		 * truncate a string and return a string of a maximum of $length characters, if $smart is true then the input string will not truncate in the middle of a word
@@ -254,6 +281,8 @@
 		  */
 		public static function create_filename($name, $dir = '', $lowercaseext = false) {
 
+			$name = self::clean($name);
+			
 			$dir = self::add_path_delimiter($dir);
 			$path = $dir.$name;
 

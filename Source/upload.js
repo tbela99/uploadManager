@@ -35,8 +35,10 @@ String.implement({shorten: function (max, end) {
 "use strict";
 	var store = 'umo',
 		transport = 'upl:tr',
+		Class = window.Class,
 		Element = window.Element,
 		Locale = window.Locale,
+		Object = window.Object,
 		addEvent = 'addEvent',
 		addEvents = 'addEvents',
 		append = 'append',
@@ -44,15 +46,36 @@ String.implement({shorten: function (max, end) {
 		fireEvent = 'fireEvent',
 		get = 'get',
 		getElement = 'getElement',
+		getFirst = 'getFirst',
 		getXHR = 'getXHR',
 		setStyle = 'setStyle',
 		toFileSize = 'toFileSize',
+		upload = 'upload',
 		hasFileReader = 'FileReader' in window,
 		input = (function () { var input = document.createElement('input'); input.type = 'file'; return input })(),
 		fileproto = window.File ? File.prototype : {},
 		method = 'mozSlice' in fileproto ? 'mozSlice' : ('webkitSlice' in fileproto ? 'webkitSlice' : ('slice' in fileproto ? 'slice' : false)),
 		//browser version
 		brokenSlice = (Browser.chrome && Browser.version < 11) || (Browser.firefox && Browser.version <= 4),
+		//replaces chars
+		replaces = {
+			A: /\u00c0|\u00c1|\u00c2|\u00c3|\u00c4|\u00c5/g,
+			C: /\u00c7/g,
+			E: /\u00c8|\u00c9|\u00ca|\u00cb/g,
+			I: /\u00cc|\u00cd|\u00ce|\u00cf/g,
+			N: /\u00d1/g,
+			O: /\u00d2|\u00d3|\u00d4|\u00d5|\u00d6/g,
+			U: /\u00d9|\u00da|\u00db|\u00dc/g,
+			Y: /\u00dd/g,
+			a: /\u00e0|\u00e1|\u00e2|\u00e3|\u00e4|\u00e5/g,
+			c: /\u00e7/g,
+			e: /\u00e8|\u00e9|\u00ea|\u00eb/g,
+			i: /\u00ec|\u00ed|\u00ee|\u00ef/g,
+			n: /\u00f1/g,
+			o: /\u00f2|\u00f3|\u00f4|\u00f5|\u00f6/g,
+			u: /\u00f9|\u00fa|\u00fb|\u00fc/g,
+			y: /\u00fd|\u00ff/g
+		},
 		
 		uploadManager = window.uploadManager = {
 			
@@ -99,7 +122,7 @@ String.implement({shorten: function (max, end) {
 			detachDragEvents: function (el) {
 			
 				el = $(el);
-				if(el.retrieve(store)) $(el).removeEvents(dragdrop).eliminate(store).getFirst().destroy();
+				if(el.retrieve(store)) $(el).removeEvents(dragdrop).eliminate(store)[getFirst]().destroy();
 				return this			
 			},	
 
@@ -186,7 +209,7 @@ String.implement({shorten: function (max, end) {
 				
 				var el = this, co = el.getCoordinates();
 				
-				el.getFirst().setStyles({
+				el[getFirst]().setStyles({
 											left: co.left,
 											top: co.top, 
 											width: co.width, 
@@ -200,7 +223,7 @@ String.implement({shorten: function (max, end) {
 			dragexit: function(e) {
 				
 				e.stop(); 
-				this.getFirst().style.display = 'none'
+				this[getFirst]().style.display = 'none'
 			},	
 			dragover: function(e) { e.stop() },
 			drop: function (e) {
@@ -209,10 +232,10 @@ String.implement({shorten: function (max, end) {
 				
 				var el = this, options = Object[append]({}, el.retrieve(store), {hideDialog: true}), transfer;
 
-				el.getFirst().style.display = 'none';
+				el[getFirst]().style.display = 'none';
 				if(e.event.dataTransfer) Array.from(e.event.dataTransfer.files).each(function (f) { 
 				
-						transfer = uploadManager.upload(Object[append]({}, options));
+						transfer = uploadManager[upload](Object[append]({}, options));
 						if(transfer) transfer.load(f)
 				})
 			}
@@ -262,9 +285,9 @@ String.implement({shorten: function (max, end) {
 							}
 							
 							var id = options.id,
-								file = $(id + '_lfile').set({checked: true, value: json.path, disabled: false}),
+								file = $(id + '_lfile')[set]({checked: true, value: json.path, disabled: false}),
 								change = function () { file.checked = this.checked },
-								checkbox = $(id).set({
+								checkbox = $(id)[set]({
 										value: json.file,
 										disabled: false,
 										events: {
@@ -326,6 +349,9 @@ String.implement({shorten: function (max, end) {
 			
 			load: function (file) {
 			
+				//clean file name
+				Object.each(replaces, function (value, key) { file = file.replace(value, key) });
+				
 				this.state = 1;
 				this.aborted = false; 
 				this[fireEvent]('load', {element: this[element], file: file, size: 0, transfer: this});
@@ -398,7 +424,13 @@ String.implement({shorten: function (max, end) {
 			load: function (file) {
 				
 				this.aborted = false;
-				this[fireEvent]('load', {element: this[element], file: file.name, size: file.size, transfer: this});
+				
+				var name = file.name;
+				
+				//clean file name
+				Object.each(replaces, function (value, key) { name = name.replace(value, key) });
+				
+				this[fireEvent]('load', {element: this[element], file: name, size: file.size, transfer: this});
 				
 				if(this.aborted) {
 				
@@ -410,9 +442,9 @@ String.implement({shorten: function (max, end) {
 				
 				this.file = file;
 				this.size = file.size;
-				this.filename = file.name;
+				this.filename = name;
 				
-				var first = this[element].getFirst('.upload-progress'),
+				var first = this[element][getFirst]('.upload-progress'),
 					span = first[getElement]('span')[setStyle]('display', 'none'),
 					field = span.getNext()[setStyle]('display', 'none'),
 					progress;
@@ -423,20 +455,20 @@ String.implement({shorten: function (max, end) {
 						
 						if(value == 1) {
 							
-							field[getElement]('label').set({text: this.filename.shorten() + ' (' + this.size[toFileSize]() + ')', title: this.filename});
+							field[getElement]('label')[set]({text: file.name.shorten() + ' (' + this.size[toFileSize]() + ')', title: file.name});
 							field.style.display = ''
 						}
 					});
 					
 				if(this.options.progressbar) progress = new ProgressBar(Object[append]({
 						
-						container: first.set('title', file.name),
+						container: first[set]('title', file.name),
 						text: file.name.shorten()
 						
 					}, typeof this.options.progressbar == 'object' ? this.options.progressbar : {}))[addEvents]({
 						change: function () {
 					
-							first.set('title', file.name + ' (' + (this.value * 100).format() + '%)')
+							first[set]('title', file.name + ' (' + (this.value * 100).format() + '%)')
 						},
 						onComplete: function () {
 						
@@ -447,7 +479,7 @@ String.implement({shorten: function (max, end) {
 						}
 					});
 					
-				field.getFirst().style.display = 'none';
+				field[getFirst]().style.display = 'none';
 				
 				this[element][getElement]('input[type=file]').destroy();	
 				
@@ -455,7 +487,7 @@ String.implement({shorten: function (max, end) {
 				uploadManager.push(this.options.container, function () {
 				
 					this.state = 1;
-					this.upload() 
+					this[upload]() 
 				}.bind(this));
 				
 				if(this.reader) this.reader.readAsBinaryString(file);
@@ -471,7 +503,7 @@ String.implement({shorten: function (max, end) {
 					
 					files.each(function (f) { 
 					
-						transfer = uploadManager.upload(Object[append]({}, op));
+						transfer = uploadManager[upload](Object[append]({}, op));
 						if(transfer) transfer.load(f)
 					})
 					
@@ -540,7 +572,7 @@ String.implement({shorten: function (max, end) {
 				var xhr = this.xhr = new XMLHttpRequest(),
 					options = this.options;
 				
-				this.add(xhr.upload, 'progress', function(e) { if (e.lengthComputable) this[fireEvent]('progress', e.loaded / e.total) }).						
+				this.add(xhr[upload], 'progress', function(e) { if (e.lengthComputable) this[fireEvent]('progress', e.loaded / e.total) }).						
 					add(xhr, 'load', function() {
 
 						if(xhr.status == 0) {
@@ -629,7 +661,7 @@ String.implement({shorten: function (max, end) {
 				if(this.reader) {
 				
 					if(this.ready) this.initUpload();
-					else setTimeout(this.upload.bind(this), 100)
+					else setTimeout(this[upload].bind(this), 100)
 				} else this.initUpload()
 			}
 		}, HTML5)),
@@ -657,6 +689,10 @@ String.implement({shorten: function (max, end) {
 				
 				this[addEvents](this.events)[addEvents]({
 				
+					success: function () {
+					
+						this[element][getElement]('[type=hidden][disabled]')[set]({disabled: false, value: this.guid})
+					},
 					load: function (file) {
 					
 						this.blocks = {};
@@ -681,7 +717,7 @@ String.implement({shorten: function (max, end) {
 					
 					failure: function () {
 					
-						this[element][getElement]('.pause-upload').set('text', Locale[get]('uploadManager.RESUME')).style.display = ''
+						this[element][getElement]('.pause-upload')[set]('text', Locale[get]('uploadManager.RESUME')).style.display = ''
 					}
 								
 				}).parent(options)
@@ -693,7 +729,7 @@ String.implement({shorten: function (max, end) {
 						html: '<div style="display:inline-block;padding:3px" class="upload-progress"><span style="display:none">&nbsp;</span><span><input id="' + options.id + '_input" type="file" name="' + options.id + '_input"' + (options.multiple ? ' multiple="multiple"' : '') + '/>'
 						+ '<input type="checkbox" disabled="disabled" style="display:none" name="' + options.name + '" id="' + options.id + '"/>'
 						+ '<input type="checkbox" disabled="disabled" style="display:none" name="file_' + options.name + '" id="'+ options.id + '_lfile"/>'
-						+ '<input type="checkbox" disabled="disabled" style="display:none" name="guid_' + options.name + '" id="'+ options.id + '_gfile"/>'
+						+ '<input type="hidden" disabled="disabled" name="guid_' + options.name + '" id="'+ options.id + '_gfile"/>'
 						+ '<label for="'+ options.id + '"></label>'
 						+ '</span></div><a class="cancel-upload" href="' + options.base + '">' + Locale[get]('uploadManager.CANCEL') + '</a><a class="pause-upload" style="display:none" href="' + options.base + '">' + Locale[get]('uploadManager.PAUSE') + '</a>'
 					}).inject(options.container);
@@ -714,14 +750,14 @@ String.implement({shorten: function (max, end) {
 			pause: function () {
 
 				this.paused = true;
-				this[element][getElement]('.pause-upload').addClass('resume-upload').set('text', Locale[get]('uploadManager.RESUME')).style.display = '';
+				this[element][getElement]('.pause-upload').addClass('resume-upload')[set]('text', Locale[get]('uploadManager.RESUME')).style.display = '';
 				this[fireEvent]('pause', this)
 			},
 			resume: function () {
 
 				this.paused = false;
 				this.failed = 0;
-				this[element][getElement]('.pause-upload').removeClass('resume-upload').set('text', Locale[get]('uploadManager.PAUSE')).style.display = this.options.pause ? '' : 'none';
+				this[element][getElement]('.pause-upload').removeClass('resume-upload')[set]('text', Locale[get]('uploadManager.PAUSE')).style.display = this.options.pause ? '' : 'none';
 				this[fireEvent]('resume', this).upload()
 			},
 			failure: function () {
@@ -733,7 +769,7 @@ String.implement({shorten: function (max, end) {
 			
 				var xhr = new XMLHttpRequest(), property;
 				
-				if(progress) this.add(xhr.upload, 'progress', progress);
+				if(progress) this.add(xhr[upload], 'progress', progress);
 				
 				properties = Object[append]({error: this.failure, abort: this.failure}, properties);
 				
@@ -834,7 +870,7 @@ String.implement({shorten: function (max, end) {
 											}
 											
 											this.compute();
-											if(this.size > this.loaded) this.upload();
+											if(this.size > this.loaded) this[upload]();
 											else if(this.size == this.loaded) {
 												
 												var self = this[fireEvent]('progress', 1),
@@ -934,8 +970,7 @@ String.implement({shorten: function (max, end) {
 									}
 									
 									this.guid = json.guid;
-									this[element][getElement]('input[name^=guid_]').value = json.guid;
-									this.upload()
+									this[upload]()
 								}					
 								catch(e) { 
 								

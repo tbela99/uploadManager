@@ -1,10 +1,10 @@
 /*
 ---
-name: Locale.en-GB.uploadManager
-description: English Language File for DatePicker
+name: Locale.en-US.uploadManager
+description: English Language File for uploadManager
 authors: Thierry Bela
 requires: [More/Locale]
-provides: Locale.en-GB.uploadManager
+provides: Locale.en-US.uploadManager
 ...
 */
 
