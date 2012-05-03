@@ -3,7 +3,7 @@ author: tbela99
 category: Utilities
 tags: [file, upload, html5, ajax]
 demo: http://tbela.fragged.org/demos/upload/Demo/
-current: 1.4.3
+current: 1.4.3.1
 sources:
   - "number.js"
   - "Source/progressbar.js"
