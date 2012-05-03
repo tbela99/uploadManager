@@ -48,6 +48,7 @@ String.implement({shorten: function (max, end) {
 		getElement = 'getElement',
 		getFirst = 'getFirst',
 		getXHR = 'getXHR',
+		set = 'set',
 		setStyle = 'setStyle',
 		toFileSize = 'toFileSize',
 		upload = 'upload',
