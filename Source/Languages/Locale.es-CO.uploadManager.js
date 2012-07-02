@@ -1,7 +1,7 @@
 /*
 ---
 name: Locale.en-CO.uploadManager
-description: Espanish-Colombia Language File for FileManager
+description: Espanish-Colombia Language File for uploadManager
 authors: David Avellaneda
 requires: [More/Locale]
 provides: Locale.es-CO.uploadManager

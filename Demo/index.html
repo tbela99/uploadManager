@@ -14,7 +14,7 @@ body {
 #upload {
 
 	border: 1px solid #ccc;
-	max-width: 300px;
+	max-width: 500px;
 	min-height: 100px;
 	position: relative;
 }
@@ -213,23 +213,65 @@ window.addEvent('domready', function() {
 	
 		e.stop();
 		uploadManager.upload(options)
+	});
+	
+	// submit form handler
+	document.id(document.forms[0]).addEvents({
+		
+		// remove files on reset
+		reset: function () {
+		
+			uploadManager.getTransfers('upload').invoke('cancel')
+		},
+		submit: function (e) {
+	
+			e.stop();
+			
+			// check file uploads
+			var transfers = uploadManager.getTransfers('upload');
+			
+			if(transfers.length == 0) {
+			
+				alert('You must select a file!');
+				return;
+			}
+			
+			// check transfer state. are some transfer incomplete ?
+			if(transfers.some(function (transfer) { return transfer.state != 4 })) {
+			
+				alert('Some transfers are not complete');
+				return
+			}
+			
+			// check the number if files uploaded
+			// if(transfers.length < 3) {
+			
+			// 	alert('Please upload more files');
+			// 	return
+			// }
+			
+			alert('Upload complete')
+		}
 	})
 })
 </script>
 </head>
 
-<body><form action="" method="get">
-<span class="message">
-You can upload up to 3 files.
-<br/>each file must not exceed 2.5Mb.
-<br/>total files size must not exceed 3.5Mb.</span>
-<br/><input type="checkbox" id="progressbar" disabled="disabled"/> <label for="progressbar">Display progressbar</label>
-<br/><input type="checkbox" id="queue"/> <label for="queue">Upload queue</label>
-<br/><input type="checkbox" id="iframe" disabled="disabled"/> <label for="iframe">Use Iframe</label>
-<br/><input type="checkbox" id="multiple" disabled="disabled"/> <label for="multiple">Enable multiple files selection</label>
-<br/><input type="checkbox" id="dd" disabled="disabled"/> <label for="dd">Use file drag drop</label>
-<br/><input type="checkbox" id="pa" readonly="readonly" disabled="disabled"/> <label>Pause/Resume on error</label>
-<div class="upload-link"><a href="#">Upload a file</a> [upload size: <span id="infos">0</span>]</div>
-<div id="upload"></div></form>
+<body>
+	<form action="" method="get">
+		<span class="message">
+		You can upload up to 3 files.
+		<br/>each file must not exceed 5Mb.
+		<br/>total files size must not exceed 10Mb.</span>
+		<br/><input type="checkbox" id="progressbar" disabled="disabled"/> <label for="progressbar">Display progressbar</label>
+		<br/><input type="checkbox" id="queue"/> <label for="queue">Upload queue</label>
+		<br/><input type="checkbox" id="iframe" disabled="disabled"/> <label for="iframe">Use Iframe</label>
+		<br/><input type="checkbox" id="multiple" disabled="disabled"/> <label for="multiple">Enable multiple files selection</label>
+		<br/><input type="checkbox" id="dd" disabled="disabled"/> <label for="dd">Use file drag drop</label>
+		<br/><input type="checkbox" id="pa" readonly="readonly" disabled="disabled"/> <label>Pause/Resume on error</label>
+		<div class="upload-link"><a href="#">Upload a file</a> [upload size: <span id="infos">0</span>]</div>
+		<div id="upload"></div>
+		<input type="submit" value="Submit"/> <input type="reset" value="Reset"/>
+	</form>
 </body>
 </html>

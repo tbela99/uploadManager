@@ -13,9 +13,11 @@
 	header("Expires: Mon, 26 Jul 1997 05:00:00 GMT"); // Date du passé
 
 	parse_str($_SERVER['QUERY_STRING'], $match);
+	
+	$match = array_keys($match);
 
 	
-	if(is_file($file = uploadHelper::decrypt(array_shift(array_keys($match))))) {
+	if(is_file($file = uploadHelper::decrypt(array_shift($match)))) {
 	
 		if(realpath($file) == TEMP_PATH.DS.basename($file)) {
 		

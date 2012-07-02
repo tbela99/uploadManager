@@ -155,37 +155,38 @@
 				fclose($handle);
 			}
 			
-		echo json_encode(array(
+			$return = array(
 		
 								'file' => basename($headers['Filename']),
 								'path' => $path, 
 								'success' =>  !empty($headers['Partial']) || $size == $filesize, 
-								'size' => $size, 'remove' => $url.'r='.urlencode($path).($guid ? '&guid='.$guid : '')
-							)
-						);
+								'size' => $size, 
+								'remove' => $url.'r='.urlencode($path).($guid ? '&guid='.$guid : '')
+							);
+							
+			if($guid)
+				$return['clean'] = $url.'c='.$guid;
+			
+		echo json_encode($return);
 	
 	} 
-	
-	else 
-		//remove file
-		if(array_key_exists('guid', $_GET)) {
+		
+	else
+		//remove chunks
+		if($guid = uploadHelper::getVar('c')) {
 
-			if($guid = uploadHelper::getVar('guid')) {
+			if(preg_match('/[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}/', $guid) && is_file(TEMP_PATH.DS.$guid)) {
 			
-				if(preg_match('/[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}/', $guid) && is_file(TEMP_PATH.DS.$guid)) {
+				//remove chunks
+				$infos = file(TEMP_PATH.DS.$guid);
 				
-					//remove chunks
-					$infos = explode("\n", file_get_contents(TEMP_PATH.DS.$guid));
+				$infos[0] = trim($infos[0]);
+				
+				for($i = 0; $i < $infos[1]; $i++)
+					if(is_file(TEMP_PATH.DS.$infos[0].$i))
+						unlink(TEMP_PATH.DS.$infos[0].$i);
 					
-					if(is_file(TEMP_PATH.DS.$infos[0]))
-						unlink(TEMP_PATH.DS.$infos[0]);
-						
-					for($i = 0; $i < $infos[1]; $i++)
-						if(is_file(TEMP_PATH.DS.$infos[0].$i))
-							unlink(TEMP_PATH.DS.$infos[0].$i);
-						
-					unlink(TEMP_PATH.DS.$guid);
-				}
+				unlink(TEMP_PATH.DS.$guid);
 			}
 		}
 	
@@ -195,9 +196,27 @@
 				
 			if(is_file($file = uploadHelper::decrypt($file))) {
 			
-				$file = realpath($file);
+				//$file = realpath($file);
 				if(is_file(TEMP_PATH.DS.basename($file)))
 					unlink($file);
+					
+				//remove file
+				if($guid = uploadHelper::getVar('guid')) {
+
+					if(preg_match('/[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}/', $guid) && is_file(TEMP_PATH.DS.$guid)) {
+					
+						//remove chunks
+						$infos = file(TEMP_PATH.DS.$guid);
+						
+						$infos[0] = trim($infos[0]);
+				
+						for($i = 0; $i < $infos[1]; $i++)
+							if(is_file(TEMP_PATH.DS.$infos[0].$i))
+								unlink(TEMP_PATH.DS.$infos[0].$i);
+							
+						unlink(TEMP_PATH.DS.$guid);
+					}
+				}
 			}
 		}
 	

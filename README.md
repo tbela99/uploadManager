@@ -20,7 +20,7 @@ creates and manage uploads with the following features:
 - easy to use
 - faster upload: each file has multiple chunks uploaded in parallel (Google Chrome, Firefox 3.6+, IE10 Platform preview 2)
 - resume upload on error/pause (Google Chrome, Firefox 4.0+, IE10 Platform preview 2)
-- file drag drop (currently supported by chrome 5+, firefox 3.6+ and safari 5.1+, IE10 Platform preview 2)
+- file drag drop (currently supported by chrome 5+, firefox 3.6+ and safari 5.1+, IE10 Platform preview 2, Opera 12)
 - optional progressbar for browsers supporting HTML5 File API (chrome5+, safari4+, Firefox 3.6+, IE10 Platform preview 2, Opera 12 (Next))
 - no input file for Firefox 4+
 - iframe for the others browsers
@@ -73,10 +73,8 @@ create a new upload field in a given container.
 - iframe - (*boolean*, optional) force iframe upload.
 - multiple - (*boolean*, optional) enable multiple file selection if the browser can handle it.
 - filetype - (*string*, optional) authorized file type.
-- name - (*string*) name of the upload form field. it contains the original name of the file sent by the user. if the upload succeed a hidden field named *'file_' + name* and containing the encrypted file path on the server will be pushed into the form.
+- name - (*string*) name of the upload form field. it contains the original name of the file sent by the user. if the upload succeed a hidden field named *'file_' + name* and containing the encrypted file path on the server will be pushed into the form. if multiple file upload is enabled then this field will be sent as an array
 for example if our form field is named *name[]*, then *name[]* will contains the original file name and *file_name[]* will contains the encrypted file path on the server.
-In addition if you use chunk upload, another input field prefixed by *guid_* will be pushed in the form. this allow you to remove temporary files from the server after the user send the form.
-for example, if your input field name is *name[]*, this field will be named *guid_name[]*.
 - progressbar - (*mixed*, optional) indicates whether to display a progressbar or not. if *false* then the progressbar is disabled. if *true* the progressbar will use default options. if it is an *object*, it will be passed as progressbar options. see [Progressbar](http://github.com/tbela99/progressbar/)
 - hideDialog - (*boolean*, optional) Firefox 4+ only: if true the file selection dialog will not be shown after the upload instance is created.
 
