@@ -40,6 +40,7 @@ String.implement({shorten: function (max, end, fill) {
 		addEvents = 'addEvents',
 		append = 'append',
 		decode = 'decode',
+		createElement = 'createElement',
 		fireEvent = 'fireEvent',
 		get = 'get',
 		getElement = 'getElement',
@@ -48,7 +49,10 @@ String.implement({shorten: function (max, end, fill) {
 		setStyle = 'setStyle',
 		toFileSize = 'toFileSize',
 		hasFileReader = 'FileReader' in window,
-		input = (function () { var input = document.createElement('input'); input.type = 'file'; return input })(),
+		setRequestHeader = 'setRequestHeader',
+		XMLHttpRequest = window.XMLHttpRequest,
+		getAsEntry = undef,
+		input = (function () { var input = document[createElement]('input'); input.type = 'file'; return input })(),
 		fileproto = window.File ? File.prototype : {},
 		method = 'mozSlice' in fileproto ? 'mozSlice' : ('webkitSlice' in fileproto ? 'webkitSlice' : ('slice' in fileproto ? 'slice' : false)),
 		//browser version
@@ -117,6 +121,8 @@ String.implement({shorten: function (max, end, fill) {
 				
 				//restrict number of uploaded files
 				if(opt.limit > 0 && this.uploads[container].length >= opt.limit) return undef;
+				
+				if(opt.limit != 1 && !opt.name.test(/^\[\]$/)) opt.name += '[]';
 				
 				//where to send the uploaded file
 				opt.base = opt.base || 'upload.php';
@@ -207,14 +213,36 @@ String.implement({shorten: function (max, end, fill) {
 			
 				e.stop();
 				
-				var el = this, options = Object[append]({}, el.retrieve(store), {hideDialog: true}), transfer;
+				var el = this, 
+					options = Object[append]({}, 
+					el.retrieve(store), {hideDialog: true}), 
+					upload = function (f) { 
+				
+						// webkit upload folder
+						// http://wiki.whatwg.org/wiki/DragAndDropEntries						
+						if(getAsEntry == undef && !['getAsEntry', 'webkitGetAsEntry', 'mozGetAsEntry', 'oGetAsEntry', 'msGetAsEntry'].some(function (method) {
+						
+							if(f[method]) getAsEntry = method;
+							
+							return getAsEntry
+						})) getAsEntry = '';
+						
+						if(getAsEntry && f[getAsEntry]) f = f[getAsEntry]();
+						
+						if(f.isDirectory) f.createReader().readEntries(function(entries) { Array.each(entries, upload) });
+						else if(f.isFile) f.file(upload, function () { /* console.log('Error! ', arguments) */ });
+						else {
+							
+							transfer = uploadManager.upload(Object[append]({}, options));
+							if(transfer) transfer.load(f)
+						}
+					},
+					dataTransfer = e.event.dataTransfer,
+					transfer;
 
 				el.getFirst().style.display = 'none';
-				if(e.event.dataTransfer) Array.from(e.event.dataTransfer.files).each(function (f) { 
 				
-						transfer = uploadManager.upload(Object[append]({}, options));
-						if(transfer) transfer.load(f)
-				})
+				if(dataTransfer) Array.each(dataTransfer.items || dataTransfer.files, upload)
 			}
 		},
 		
@@ -287,7 +315,7 @@ String.implement({shorten: function (max, end, fill) {
 						}
 					}).setOptions(options);
 				
-				element = this.createElement(options);
+				element = this[createElement](options);
 				
 				this.checkbox = element[getElement]('#' + options.id).store(transport, this);			
 				element[getElement]('a.cancel-upload')[addEvent]("click", function(e) { 
@@ -495,7 +523,7 @@ String.implement({shorten: function (max, end, fill) {
 							var xhr = new XMLHttpRequest();
 							
 							xhr.open('GET', remove, true);
-							xhr.setRequestHeader('Sender', 'XMLHttpRequest');
+							xhr[setRequestHeader]('Sender', 'XMLHttpRequest');
 							xhr.send()
 						})
 					},
@@ -605,9 +633,9 @@ String.implement({shorten: function (max, end, fill) {
 				this.element[getElement]('.resume-upload').style.display = 'none';
 				
 				xhr.open('POST', this.options.base, true);
-				xhr.setRequestHeader('Size', this.size);
-				xhr.setRequestHeader('Filename', this.filename);
-				xhr.setRequestHeader('Sender', 'XMLHttpRequest');
+				xhr[setRequestHeader]('Size', this.size);
+				xhr[setRequestHeader]('Filename', this.filename);
+				xhr[setRequestHeader]('Sender', 'XMLHttpRequest');
 				
 				//FF
 				if(this.binary) xhr.sendAsBinary(this.bin);
@@ -663,7 +691,7 @@ String.implement({shorten: function (max, end, fill) {
 							var xhr = new XMLHttpRequest();
 							
 							xhr.open('GET', this.remove, true);
-							xhr.setRequestHeader('Sender', 'XMLHttpRequest');
+							xhr[setRequestHeader]('Sender', 'XMLHttpRequest');
 							xhr.send()
 						}
 					},
@@ -729,11 +757,11 @@ String.implement({shorten: function (max, end, fill) {
 				for(property in properties) if(properties.hasOwnProperty(property)) this.add(xhr, property, properties[property]);
 				
 				xhr.open('POST', this.options.base, true);
-				xhr.setRequestHeader('Size', this.size);
-				xhr.setRequestHeader('Filename', this.filename);
-				xhr.setRequestHeader('Sender', 'XMLHttpRequest');
+				xhr[setRequestHeader]('Size', this.size);
+				xhr[setRequestHeader]('Filename', this.filename);
+				xhr[setRequestHeader]('Sender', 'XMLHttpRequest');
 				
-				if(headers != undef) for(property in headers) if(headers.hasOwnProperty(property)) xhr.setRequestHeader(property, headers[property]);
+				if(headers != undef) for(property in headers) if(headers.hasOwnProperty(property)) xhr[setRequestHeader](property, headers[property]);
 				
 				return xhr
 			},
@@ -832,7 +860,7 @@ String.implement({shorten: function (max, end, fill) {
 												
 												// remove chuncks
 												c.open('GET', json.clean, true);
-												c.setRequestHeader('Sender', 'XMLHttpRequest');
+												c[setRequestHeader]('Sender', 'XMLHttpRequest');
 												c.send();
 												
 												delete json.clean;

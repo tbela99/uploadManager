@@ -18,9 +18,10 @@ for a detailed usage see [HOWTO.md](https://github.com/tbela99/uploadManager/blo
 creates and manage uploads with the following features:
 
 - easy to use
+- folder drag drop (currently supported by chrome 21+)
+- file drag drop (currently supported by chrome 5+, firefox 3.6+ and safari 5.1+, IE10 Platform preview 2, Opera 12)
 - faster upload: each file has multiple chunks uploaded in parallel (Google Chrome, Firefox 3.6+, IE10 Platform preview 2)
 - resume upload on error/pause (Google Chrome, Firefox 4.0+, IE10 Platform preview 2)
-- file drag drop (currently supported by chrome 5+, firefox 3.6+ and safari 5.1+, IE10 Platform preview 2, Opera 12)
 - optional progressbar for browsers supporting HTML5 File API (chrome5+, safari4+, Firefox 3.6+, IE10 Platform preview 2, Opera 12 (Next))
 - no input file for Firefox 4+
 - iframe for the others browsers
