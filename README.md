@@ -18,10 +18,11 @@ for a detailed usage see [HOWTO.md](https://github.com/tbela99/uploadManager/blo
 creates and manage uploads with the following features:
 
 - easy to use
+- Select and upload folders from the file browser dialog (currently supported by chrome 22+)
 - folder drag drop (currently supported by chrome 21+)
 - file drag drop (currently supported by chrome 5+, firefox 3.6+ and safari 5.1+, IE10 Platform preview 2, Opera 12)
-- faster upload: each file has multiple chunks uploaded in parallel (Google Chrome, Firefox 3.6+, IE10 Platform preview 2)
-- resume upload on error/pause (Google Chrome, Firefox 4.0+, IE10 Platform preview 2)
+- faster upload: each file has multiple chunks uploaded in parallel (Google Chrome, Firefox 3.6+, Opera 12.5+, IE10 Platform preview 2)
+- resume upload on error/pause (Google Chrome, Firefox 4.0+, Opera 12.5+, IE10 Platform preview 2)
 - optional progressbar for browsers supporting HTML5 File API (chrome5+, safari4+, Firefox 3.6+, IE10 Platform preview 2, Opera 12 (Next))
 - no input file for Firefox 4+
 - iframe for the others browsers
@@ -64,6 +65,7 @@ create a new upload field in a given container.
 ##### Options:
 
 - container - (*string*) upload container id.
+- folder - (*boolean*) Select folders instead of files in the file selection dialog. (Chrome 22+)
 - pause - (*boolean*) allow user to pause/resume upload (if the browser can resume broken upload) otherwise the resume button will only appear when an error occur. default to false.
 - chunks - (*int*) number of chunks uploaded simultaneously for a file. default to 3.
 - chunckSize - (*int*) chunk file size. default to 1Mb. if the browser can resume broken file upload, file will be split in pieces of a maximum length of chunckSize.
@@ -339,6 +341,9 @@ Example
 						//only one file can be uploaded
 						limit: 1,
 						
+						// uncomment the following line to enable folder upload in google chrome 22+
+						// folder: true,
+						
 						//upload field name
 						name: 'picture',
 						
@@ -346,7 +351,22 @@ Example
 						filetype: 'jpg,gif,png',
 						
 						//where to send uploaded file
-						base: '/files/upload'
+						base: '/files/upload',
+						
+						// dynamically add UI elements to the upload field
+						onCreate: function (transfer) {
+									
+							//add ui elements dynamically like a textarea ?
+							transfer.toElement().grab(new Element('span[text=UI element]'))
+						},
+						onComplete: function () {
+						
+							alert('I am complete')
+						},
+						allComplete: function () {
+				
+							alert('Yay! we are all complete')
+						}
 					}
 					
 		//enable drap & drop
@@ -356,19 +376,8 @@ Example
 		document.getElement("#dropfiles!+a").addEvent("click", function (e) {
 		
 			e.stop();
-			var transfer = uploadManager.upload(options);
 			
-			if(transfer) {
-			
-				//add ui elements
-				transfer.toElement().grab(new Element('span[text=UI element]'));
-				
-				//do stuff
-				transfer.addEvent('allComplete', function () {
-				
-					alert('Yay!')
-				})
-			}
+			uploadManager.upload(options);
 		})
 	})
 
@@ -404,6 +413,7 @@ a simple form to upload a text file.
 		onSuccess: function () { alert('Transfer completed succesfully!') }
 	};
 
+	// check files are uploaded before the form can be submitted
 	window.addEvent('domready', function () {
 	
 		//add click listener on the link

@@ -34,8 +34,11 @@ String.implement({shorten: function (max, end, fill) {
 "use strict";
 	var store = 'umo',
 		transport = 'upl:tr',
+		Browser = window.Browser,
 		Element = window.Element,
 		Locale = window.Locale,
+		Object = window.Object,
+		XMLHttpRequest = window.XMLHttpRequest,
 		addEvent = 'addEvent',
 		addEvents = 'addEvents',
 		append = 'append',
@@ -50,11 +53,10 @@ String.implement({shorten: function (max, end, fill) {
 		toFileSize = 'toFileSize',
 		hasFileReader = 'FileReader' in window,
 		setRequestHeader = 'setRequestHeader',
-		XMLHttpRequest = window.XMLHttpRequest,
 		getAsEntry = undef,
 		input = (function () { var input = document[createElement]('input'); input.type = 'file'; return input })(),
 		fileproto = window.File ? File.prototype : {},
-		method = 'mozSlice' in fileproto ? 'mozSlice' : ('webkitSlice' in fileproto ? 'webkitSlice' : ('slice' in fileproto ? 'slice' : false)),
+		method = 'slice' in fileproto ? 'slice' : ('mozSlice' in fileproto ? 'mozSlice' : ('webkitSlice' in fileproto ? 'webkitSlice' : false)),
 		//browser version
 		brokenSlice = (Browser.chrome && Browser.version < 11) || (Browser.firefox && Browser.version <= 4),
 		
@@ -130,10 +132,10 @@ String.implement({shorten: function (max, end, fill) {
 				
 				if(opt.iframe || !this.xmlhttpupload) transfer = new Transfert(opt);
 				
-				//opera does not yet support chunck file upload
-				else if(this.resume && !Browser.opera) transfer = new HTML5MultipartTransfert(opt);
+				//opera 12 has 'slice' method but can't resume uploads
+				else if(this.resume  && (!Browser.opera || Browser.version > 12)) transfer = new HTML5MultipartTransfert(opt);
 				else transfer = new HTML5Transfert(opt);
-			
+				
 				this.uploads[container].push(transfer);
 			
 				return transfer
@@ -213,11 +215,10 @@ String.implement({shorten: function (max, end, fill) {
 			
 				e.stop();
 				
-				var el = this, 
-					options = Object[append]({}, 
-					el.retrieve(store), {hideDialog: true}), 
+				var dataTransfer = e.event.dataTransfer,
+					options = Object[append]({}, this.retrieve(store), {hideDialog: true}),
 					upload = function (f) { 
-				
+					
 						// webkit upload folder
 						// http://wiki.whatwg.org/wiki/DragAndDropEntries						
 						if(getAsEntry == undef && !['getAsEntry', 'webkitGetAsEntry', 'mozGetAsEntry', 'oGetAsEntry', 'msGetAsEntry'].some(function (method) {
@@ -237,11 +238,9 @@ String.implement({shorten: function (max, end, fill) {
 							if(transfer) transfer.load(f)
 						}
 					},
-					dataTransfer = e.event.dataTransfer,
 					transfer;
-
-				el.getFirst().style.display = 'none';
 				
+				this.getFirst().style.display = 'none';
 				if(dataTransfer) Array.each(dataTransfer.items || dataTransfer.files, upload)
 			}
 		},
@@ -264,6 +263,8 @@ String.implement({shorten: function (max, end, fill) {
 					
 				var element, container = options.container;
 					
+				// keep a copy
+				this._options = Object.append({}, options);
 				this[addEvents]({
 		
 						abort: function () { this.state = 2 },
@@ -478,29 +479,41 @@ String.implement({shorten: function (max, end, fill) {
 				if(this.reader) this.reader.readAsBinaryString(file);
 				return this
 			},
+			
 			createElement: function (options) {
 			
-				var input = this.createHTML(options)[getElement]('input[type=file]')[addEvent]('change', function (e) {
+				var self = this, input = self.createHTML(options)[getElement]('input[type=file]')[addEvent]('change', function (e) {
+			
+						var loaded = false,
+							options = Object[append]({}, self._options, {hideDialog: true}),
+							transfer;
+							
+						Array.each(input.files, function (f) { 
+
+							if(f.name == '.' || f.name == '..') return;
+							else if(!loaded) {
+							
+								self.load(f);
+								loaded = true
+							}
+							else {
+								
+								transfer = uploadManager.upload(Object[append]({}, options));
+								if(transfer) transfer.load(f)
+							}
+						})
+					});
 				
-					var files = Array.from(e.target.files), op = Object[append]({}, options, {hideDialog: true}), transfer;
-					
-					this.load(files.shift());
-					
-					files.each(function (f) { 
-					
-						transfer = uploadManager.upload(Object[append]({}, op));
-						if(transfer) transfer.load(f)
-					})
-					
-				}.bind(this));
+				// directory chooser
+				if(options.folder) input.set({directory: '', webkitdirectory: '', mozdirectory: '', msdirectory: '', odirectory: '' });
 								
 				if(Browser.name == 'firefox' && Browser.version >= 4) {
 				
 					new Element('a', {text: Locale[get]('uploadManager.BROWSE'), 'class': 'browse-upload', href: '#', events: {click: function (e) { e.stop(); input.click() }}}).inject(input[setStyle]('display', 'none'), 'before');
-					if(!this.options.hideDialog) input.click.delay(10, input)
+					if(!self.options.hideDialog) input.click.delay(10, input)
 				}
 						
-				return this[addEvent]('abort', function () { input.value = '' }).element
+				return self[addEvent]('abort', function () { input.value = '' }).element
 			}
 		},
 		
@@ -981,32 +994,33 @@ String.implement({shorten: function (max, end, fill) {
 
 				if(this.paused) return;
 				
-				var i, offset, chunckSize = this.options.chunckSize;
-				
-				if(!this.guid) {
-                                    
+				if(!this.guid)      
 					this.createGuid();
-					return
+					
+				else {
+					
+					var i, offset, chunckSize = this.options.chunckSize;
+					
+					for(i in this.blocks) {
+							
+						if(this.active == this.options.chunks) break;
+						
+						if(!this.uploads[i]) {
+							
+							offset = Math.min(this.size, i * chunckSize);
+							this.uploads[i] = {
+
+								loaded: 0,
+								offset: offset,
+								blob: this.file[method](offset, chunckSize + (!brokenSlice ? offset : 0))
+							}
+						}
+						else this.active++;
+						
+						this.initUpload(i)
+					}
 				}
 				
-				for(i in this.blocks) {
-						
-					if(this.active == this.options.chunks) break;
-					
-					if(!this.uploads[i]) {
-						
-						offset = Math.min(this.size, i * chunckSize);
-						this.uploads[i] = {
-
-							loaded: 0,
-							offset: offset,
-							blob: this.file[method](offset, chunckSize + (!brokenSlice ? offset : 0))
-						}
-					}
-					else this.active++;
-					
-					this.initUpload(i)
-				}
 			}
 			
 		}, HTML5));

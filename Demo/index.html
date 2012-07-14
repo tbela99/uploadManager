@@ -1,7 +1,7 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" >
 <title>File Upload</title>
 <style type="text/css">
 html { margin: 0 }
@@ -106,6 +106,9 @@ window.addEvent('domready', function() {
 			
 			base: '../php/upload.php',
 			
+			// enable folder upload
+			folder: true,
+			
 			//you cannot upload more than 3 files
 			limit: 3,
 			
@@ -113,10 +116,10 @@ window.addEvent('domready', function() {
 			pause: true,
 			
 			//each file size must be less than 2.5Mb
-			filesize: 2621440,
+			filesize: 5242880,
 			
-			//total files size must not exceed 3.5Mb
-			maxsize: 3670016,
+			//total files size must not exceed 5Mb
+			maxsize: 10485760,
 			
 			//use iframe
 			iframe: false,
@@ -183,7 +186,7 @@ window.addEvent('domready', function() {
 	if(uploadManager.multiple) {
 	
 		mu = function () { options.multiple = this.checked };
-		$('multiple').addEvents({click: mu, change: mu, checked: true}).disabled = false;
+		$('multiple').addEvents({click: mu, change: mu}).set({checked: true, disabled: false});
 	}
 	
 	if(uploadManager.xmlhttpupload) {
@@ -206,6 +209,7 @@ window.addEvent('domready', function() {
 	uploadManager.enqueue = $('queue').addEvents({click: fn, change: fn}).checked;
 	uploadManager.iframe = $('iframe').set({events: {click: fr, change: fr}, disabled: !uploadManager.xmlhttpupload, checked: !uploadManager.xmlhttpupload }).checked;
 	$('pa').checked = uploadManager.resume;
+	$('folder').addEvents({change: function () { options.folder = this.check }, click: function () { options.folder = this.checked }});
 	
 	uploadManager.attachDragEvents('upload', options);
 	
@@ -261,17 +265,18 @@ window.addEvent('domready', function() {
 	<form action="" method="get">
 		<span class="message">
 		You can upload up to 3 files.
-		<br/>each file must not exceed 5Mb.
-		<br/>total files size must not exceed 10Mb.</span>
-		<br/><input type="checkbox" id="progressbar" disabled="disabled"/> <label for="progressbar">Display progressbar</label>
-		<br/><input type="checkbox" id="queue"/> <label for="queue">Upload queue</label>
-		<br/><input type="checkbox" id="iframe" disabled="disabled"/> <label for="iframe">Use Iframe</label>
-		<br/><input type="checkbox" id="multiple" disabled="disabled"/> <label for="multiple">Enable multiple files selection</label>
-		<br/><input type="checkbox" id="dd" disabled="disabled"/> <label for="dd">Use file drag drop</label>
-		<br/><input type="checkbox" id="pa" readonly="readonly" disabled="disabled"/> <label>Pause/Resume on error</label>
-		<div class="upload-link"><a href="#">Upload a file</a> [upload size: <span id="infos">0</span>]</div>
+		<br>each file must not exceed 5Mb.
+		<br>total files size must not exceed 10Mb.</span>
+		
+		<br><input type="checkbox" id="progressbar" disabled> <label for="progressbar">Display progressbar</label>
+		<br><input type="checkbox" id="queue"> <label for="queue">Upload queue</label>
+		<br><input type="checkbox" id="iframe" disabled> <label for="iframe">Use Iframe</label>
+		<br><input type="checkbox" id="multiple" disabled> <label for="multiple">Enable multiple files selection</label>
+		<br><input type="checkbox" id="dd" disabled> <label for="dd">Use file drag drop</label>
+		<br><input type="checkbox" id="pa" readonly disabled> <label>Pause/Resume on error</label>
+		<div class="upload-link"><a href="#">Upload a file</a> (<input type="checkbox" checked id="folder"> <label for="folder">Upload a folder</label>) [upload size: <span id="infos">0</span>]</div>
 		<div id="upload"></div>
-		<input type="submit" value="Submit"/> <input type="reset" value="Reset"/>
+		<input type="submit" value="Submit"> <input type="reset" value="Reset">
 	</form>
 </body>
 </html>
