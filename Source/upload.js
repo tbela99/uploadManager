@@ -221,7 +221,12 @@ String.implement({shorten: function (max, end, fill) {
 					
 						// webkit upload folder
 						// http://wiki.whatwg.org/wiki/DragAndDropEntries						
-						if(getAsEntry == undef && !['getAsEntry', 'webkitGetAsEntry', 'mozGetAsEntry', 'oGetAsEntry', 'msGetAsEntry'].some(function (method) {
+						if(getAsEntry == undef && ![
+						
+							'getAsFile', // chrome 20 need this
+							'getAsEntry', 'webkitGetAsEntry', 'mozGetAsEntry', 'oGetAsEntry', 'msGetAsEntry'
+						
+							].some(function (method) {
 						
 							if(f[method]) getAsEntry = method;
 							
