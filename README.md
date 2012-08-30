@@ -18,7 +18,7 @@ for a detailed usage see [HOWTO.md](https://github.com/tbela99/uploadManager/blo
 creates and manage uploads with the following features:
 
 - easy to use
-- Select and upload folders from the file browser dialog (currently supported by chrome 22+)
+- Select and upload folders from the file browser dialog (tested in chrome 20+)
 - folder drag drop (currently supported by chrome 21+)
 - file drag drop (currently supported by chrome 5+, firefox 3.6+ and safari 5.1+, IE10 Platform preview 2, Opera 12)
 - faster upload: each file has multiple chunks uploaded in parallel (Google Chrome, Firefox 3.6+, Opera 12.5+, IE10 Platform preview 2)

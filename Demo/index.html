@@ -157,14 +157,14 @@ window.addEvent('domready', function() {
 			onCancel: function (obj) {
 			
 				//upload size
-				$('infos').set('html', uploadManager.getSize('upload').toFileSize());
+				$('infos').set('html', uploadManager.getSize(this.options.container).toFileSize());
 				if(obj.message) alert('Upload cancelled:\n' + obj.message)
 				
 			},
 			onSuccess: function (infos) {
 							
 				//upload size
-				$('infos').set('html', uploadManager.getSize('upload').toFileSize());
+				$('infos').set('html', uploadManager.getSize(this.options.container).toFileSize());
 				//console.log(infos.file);
 				//download link
 				new Element('span', {html: '<a href="../php/upload.php?' + infos.path + '&dl=1&filename=' + infos.file + '">download</a> -&nbsp;'}).inject($(infos.transfer).getElement('a'), 'before')

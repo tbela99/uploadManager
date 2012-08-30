@@ -124,7 +124,7 @@ String.implement({shorten: function (max, end, fill) {
 				//restrict number of uploaded files
 				if(opt.limit > 0 && this.uploads[container].length >= opt.limit) return undef;
 				
-				if(opt.limit != 1 && !opt.name.test(/^\[\]$/)) opt.name += '[]';
+				if(opt.limit != 1 && !opt.name.test(/\[\]$/)) opt.name += '[]';
 				
 				//where to send the uploaded file
 				opt.base = opt.base || 'upload.php';
