@@ -193,22 +193,10 @@ String.implement({shorten: function (max, end, fill) {
 						
 				dragenter: function(e) {
 				
-					e.stop();
-					
-					var el = this, co = el.getCoordinates();
-					
-					el.getFirst().setStyles({
-												left: co.left,
-												top: co.top, 
-												width: co.width, 
-												height: 24,
-												backgroundColor: '#E1F1FD',
-												textAlign: 'center',
-												display: 'block',
-												zIndex: 10
-											}).tween('backgroundColor', '#1096E6')										
+					e.stop();					
+					this.getFirst().morph('.drop-upload-activ').style.diplay = 'block';					
 				},	
-				dragexit: function(e) {
+				dragleave: function(e) {
 					
 					e.stop(); 
 					this.getFirst().style.display = 'none'
@@ -1037,7 +1025,7 @@ String.implement({shorten: function (max, end, fill) {
 				
 			}, HTML5));
 			
-		Object[append](Element.NativeEvents, {dragenter: 2, dragexit: 2, dragover: 2, drop: 2});
+		Object[append](Element.NativeEvents, {dragenter: 2, dragleave: 2, dragover: 2, drop: 2});
 			
 		return uploadManager
 	}
