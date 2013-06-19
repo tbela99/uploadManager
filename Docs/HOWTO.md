@@ -48,6 +48,27 @@ you should also change the methods *uploadHelper::encrypt()* and *uploadHelper::
 	}
 
 	/*
+	
+		An element is created as first child of #upload (or the element el called by attachDragEvents(el). It is hidden on creation with style "display:none".
+		style of this el, and style for morph when drag enter is fired
+	*/
+	.drop-upload {
+		
+		left: 0; top: 0;
+		width:100%; height: 24px;
+		z-index: 10;
+		background-color: #000;
+		vertical-align: middle;
+		text-align: center;
+		color:#fff;
+	}
+	.drop-upload-activ {
+		
+		height: 24px;
+		background-color: #E1F1FD;
+	}
+
+	/*
 
 		cancel upload button
 	*/
