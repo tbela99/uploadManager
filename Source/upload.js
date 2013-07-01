@@ -473,7 +473,9 @@ String.implement({shorten: function (max, end, fill) {
 					uploadManager.push(this.options.container, function () {
 					
 						this.state = 1;
-						this.upload() 
+						if(this.options.autoStartUpload !== false){
+							this.upload();
+						}
 					}.bind(this));
 					
 					if(this.reader) this.reader.readAsBinaryString(file);
