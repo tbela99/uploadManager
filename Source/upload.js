@@ -652,7 +652,9 @@ String.implement({shorten: function (max, end, fill) {
 					
 					//FF
 					if(this.binary) xhr.sendAsBinary(this.bin);
-					else xhr.send(this.file)
+					else xhr.send(this.file);
+					
+					this[fireEvent]('uploadStarted');
 				},
 				upload: function () {
 
@@ -943,7 +945,9 @@ String.implement({shorten: function (max, end, fill) {
 							Guid: this.guid
 						}
 					);
-					xhr.send()			
+					xhr.send();
+					
+					this[fireEvent]('uploadStarted');
 				},
 				createGuid: function () {
 				
