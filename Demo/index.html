@@ -22,7 +22,20 @@ a {
 
 	text-decoration: none;
 }
-
+.drop-upload {
+    
+    left: 0; top: 0;
+	height: 24px;
+    z-index: 10;
+    background-color: #000;
+    vertical-align: middle;
+    text-align: center;
+    color:#fff;
+  }
+  .drop-upload-active {
+    
+    background-color: #5BA2D5;
+  }
 /*
 
 	cancel upload button
@@ -95,7 +108,6 @@ window.addEvent('domready', function() {
 			text: 'Pending...',
 			onChange: function (value, progressbar) {
 			
-				//console.log(arguments)
 				progressbar.setText('completed: ' + (100 * value).format() + '%')
 			}
 		},
@@ -121,7 +133,7 @@ window.addEvent('domready', function() {
 			//total files size must not exceed 5Mb
 			maxsize: 10485760,
 			
-			//use iframe
+			//upload via iframe
 			iframe: false,
 			
 			//upload container id
@@ -133,22 +145,47 @@ window.addEvent('domready', function() {
 			//upload field name
 			name: 'alias',
 			//limit: 2, /* limit to two downloads */
+			autostart: true, //enable automatic file upload
 			multiple: true, //enable multiple selection in file dialog
 			progressbar: progressbarOptions,
 			onCreate: function () {
 			
-				//no progressbar, we display a plain text instead
-				if(!this.options.progressbar) {
+				var self = this;
 				
-					var bar = new Element('span[style=width:140px;text-align:center;display:inline-block][text=\\[upload\\] Pending ...]').inject(this.element, 'top');
+				// if manual upload we add a 'start' button
+				if(!self.options.autostart) {
+				
+					new Element('a[href=#][style=display:inline-block;margin:0 5px]', {events: {click: function (e) {
 					
-					this.addEvent('progress', function (value) {
+						e.stop();
+						
+						// trigger upload manually
+						self.upload();
+						this.destroy()
+						
+					}}}).set('text', '[Start upload]').inject(self.element)
+				}
+				
+				//no progressbar, we display a plain text instead
+				if(!self.options.progressbar) {
+				
+					var bar = new Element('span[style=width:140px;text-align:center;display:inline-block]').set('text', 'Pending ...').inject(self.element, 'top');
+					
+					self.addEvent('progress', function (value) {
 					
 						bar.innerHTML = '[upload] ' + (value * 100).format() + '%';
 						
 						if(value == 1) bar.destroy.delay(50, bar)
 					})
 				}
+			},
+			onLoad: function () {
+			
+				if(this.progressbar) this.progressbar.setText('[' + this.file.name.substring(0, 10) + '] Pending ...')
+			},
+			onStart: function () {
+			
+				window.console && console.log('transfer started', this.file)
 			},
 			onAbort: function (object) {
 			
@@ -179,6 +216,7 @@ window.addEvent('domready', function() {
 		},
 		fn = function () { uploadManager.enqueue = this.checked },
 		fr = function () { options.iframe = this.checked },
+		autostart = function () { options.autostart = this.checked },
 		mu,
 		pr,
 		dd = document.getElement('label[for=dd]');
@@ -207,12 +245,19 @@ window.addEvent('domready', function() {
 	
 	//enable/disable queue
 	uploadManager.enqueue = $('queue').addEvents({click: fn, change: fn}).checked;
+	
+	// enable / disable upload via iframe
 	uploadManager.iframe = $('iframe').set({events: {click: fr, change: fr}, disabled: !uploadManager.xmlhttpupload, checked: !uploadManager.xmlhttpupload }).checked;
+	
 	$('pa').checked = uploadManager.resume;
+	
+	$('autostart').set({events: {click: autostart, change: autostart}, checked: options.autostart});
+	
 	$('folder').addEvents({change: function () { options.folder = this.check }, click: function () { options.folder = this.checked }});
 	
 	uploadManager.attachDragEvents('upload', options);
 	
+	// add new file uploader
 	document.getElement('a').addEvent('click', function(e) {
 	
 		e.stop();
@@ -269,6 +314,7 @@ window.addEvent('domready', function() {
 		<br>total files size must not exceed 10Mb.</span>
 		
 		<br><input type="checkbox" id="progressbar" disabled> <label for="progressbar">Display progressbar</label>
+		<br><input type="checkbox" id="autostart"> <label for="autostart">Automatically start upload</label>
 		<br><input type="checkbox" id="queue"> <label for="queue">Upload queue</label>
 		<br><input type="checkbox" id="iframe" disabled> <label for="iframe">Use Iframe</label>
 		<br><input type="checkbox" id="multiple" disabled> <label for="multiple">Enable multiple files selection</label>

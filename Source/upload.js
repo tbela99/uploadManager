@@ -66,7 +66,7 @@ String.implement({shorten: function (max, end, fill) {
 			uploadManager = {
 				
 				/* xmlhttp can be used */
-				xmlhttpupload: 'files' in input && window.XMLHttpRequest && 'upload' in new XMLHttpRequest(),
+				xmlhttpupload: 'files' in input && XMLHttpRequest && 'upload' in new XMLHttpRequest(),
 				
 				/* can handle multiple files upload */
 				multiple: 'multiple' in input,
@@ -114,7 +114,7 @@ String.implement({shorten: function (max, end, fill) {
 
 				upload: function(options) {
 				
-					var opt = Object[append]({limit: 0, filesize: 0, maxsize: 0, progressbar: true/*, resume: false, iframe: false */}, options),
+					var opt = Object[append]({limit: 0, filesize: 0, maxsize: 0, progressbar: true, autostart: true/*, resume: false, iframe: false */}, options),
 						container = opt.container,
 						transfer;
 					
@@ -193,15 +193,28 @@ String.implement({shorten: function (max, end, fill) {
 						
 				dragenter: function(e) {
 				
-					e.stop();					
-					this.getFirst().morph('.drop-upload-activ').style.diplay = 'block';					
+					e.stop();
+					
+					if(e.target == this) this.getFirst().setStyle('display', 'block').morph('.drop-upload-active');					
 				},	
 				dragleave: function(e) {
 					
 					e.stop(); 
-					this.getFirst().style.display = 'none'
+					
+					if(e.target == this) {
+					
+						var element = this.getFirst();
+						element.morph('.drop-upload').get('morph').chain(function () {
+						
+							element.style.display = 'none'
+						})
+					} 
 				},	
-				dragover: function(e) { e.stop() },
+				dragover: function(e) { 
+				
+					e.stop();
+					this.getFirst();		
+				},
 				drop: function (e) {
 				
 					e.stop();
@@ -214,8 +227,8 @@ String.implement({shorten: function (max, end, fill) {
 							// http://wiki.whatwg.org/wiki/DragAndDropEntries						
 							if(getAsEntry == undef && ![
 							
-								'getAsFile', // chrome 20 need this
-								'getAsEntry', 'webkitGetAsEntry', 'mozGetAsEntry', 'oGetAsEntry', 'msGetAsEntry'
+								'getAsEntry', 'webkitGetAsEntry', 'mozGetAsEntry', 'oGetAsEntry', 'msGetAsEntry',
+								'getAsFile' // chrome 20 need this
 							
 								].some(function (method) {
 							
@@ -236,7 +249,7 @@ String.implement({shorten: function (max, end, fill) {
 						},
 						transfer;
 					
-					this.getFirst().style.display = 'none';
+					this.getFirst().removeClass('drop-upload-active').style.display = 'none';
 					if(dataTransfer) Array.each(dataTransfer.items || dataTransfer.files, upload)
 				}
 			},
@@ -246,6 +259,7 @@ String.implement({shorten: function (max, end, fill) {
 				state: 0,
 				filesize: 0,
 				complete: false,
+			/* 	progressbar: null, */
 				initialize: function(options) {
 
 					//file type filter
@@ -370,6 +384,11 @@ String.implement({shorten: function (max, end, fill) {
 					this.element.destroy()
 				},
 				
+				// start upload
+				upload: function () {
+				
+				},
+				
 				Implements: [Options, Events]
 			}),
 			
@@ -416,8 +435,6 @@ String.implement({shorten: function (max, end, fill) {
 				load: function (file) {
 					
 					this.aborted = false;
-					this[fireEvent]('load', {element: this.element, file: file.name, size: file.size, transfer: this});
-					
 					if(this.aborted) {
 					
 						this[fireEvent]('abort', {file: file, message: this.message || '', transfer: this});
@@ -446,7 +463,7 @@ String.implement({shorten: function (max, end, fill) {
 							}
 						});
 						
-					if(this.options.progressbar) progress = new ProgressBar(Object[append]({
+					if(this.options.progressbar) progress = this.progressbar = new ProgressBar(Object[append]({
 							
 							container: first.set('title', file.name),
 							text: file.name.shorten()
@@ -465,6 +482,8 @@ String.implement({shorten: function (max, end, fill) {
 							}
 						});
 						
+					this[fireEvent]('load', {element: this.element, file: file.name, size: file.size, transfer: this});
+					
 					field.getFirst().style.display = 'none';
 					
 					this.element[getElement]('input[type=file]').destroy();	
@@ -473,9 +492,8 @@ String.implement({shorten: function (max, end, fill) {
 					uploadManager.push(this.options.container, function () {
 					
 						this.state = 1;
-						if(this.options.autoStartUpload !== false){
-							this.upload();
-						}
+						if(this.options.autostart) this.upload();
+							
 					}.bind(this));
 					
 					if(this.reader) this.reader.readAsBinaryString(file);
@@ -656,7 +674,7 @@ String.implement({shorten: function (max, end, fill) {
 					if(this.binary) xhr.sendAsBinary(this.bin);
 					else xhr.send(this.file);
 					
-					this[fireEvent]('uploadStarted');
+					this[fireEvent]('start', this);
 				},
 				upload: function () {
 
@@ -685,7 +703,7 @@ String.implement({shorten: function (max, end, fill) {
 					//user can stop/resume tranfert only on error ?
 					/* pause: false, */
 					chunks: 3, //number of concurrent transfers per upload
-					chunckSize: 1048576	//upload chunk max size
+					chunckSize: 1048576	//upload chunk max size default 1Mb
 				},
 				initialize: function(options) {
 					
@@ -948,8 +966,6 @@ String.implement({shorten: function (max, end, fill) {
 						}
 					);
 					xhr.send();
-					
-					this[fireEvent]('uploadStarted');
 				},
 				createGuid: function () {
 				
@@ -1000,8 +1016,10 @@ String.implement({shorten: function (max, end, fill) {
 
 					if(this.paused) return;
 					
-					if(!this.guid)      
-						this.createGuid();
+					if(!this.guid) {
+					
+						this.createGuid()[fireEvent]('start', this)
+					}     
 						
 					else {
 						
@@ -1026,7 +1044,6 @@ String.implement({shorten: function (max, end, fill) {
 							this.initUpload(i)
 						}
 					}
-					
 				}
 				
 			}, HTML5));

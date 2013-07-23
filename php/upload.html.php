@@ -204,7 +204,13 @@ var win = parent.window,
 						
 						?>return false" class="cancel-upload">' + Locale.get('uploadManager.CANCEL') + '</a>');
 						
-					document.getElementById('iform').submit()
+					if(transfer.options.autostart) document.getElementById('iform').submit()
+					else transfer.upload = function () {
+					
+					
+						transfer[fireEvent]('start', transfer);
+						document.getElementById('iform').submit()
+					} 
 				}
 			})
 		}

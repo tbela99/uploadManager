@@ -80,6 +80,7 @@ create a new upload field in a given container.
 for example if our form field is named *name[]*, then *name[]* will contains the original file name and *file_name[]* will contains the encrypted file path on the server.
 - progressbar - (*mixed*, optional) indicates whether to display a progressbar or not. if *false* then the progressbar is disabled. if *true* the progressbar will use default options. if it is an *object*, it will be passed as progressbar options. see [Progressbar](http://github.com/tbela99/progressbar/)
 - hideDialog - (*boolean*, optional) Firefox 4+ only: if true the file selection dialog will not be shown after the upload instance is created.
+- autostart - (*boolean*, optional) automatically start upload. default to true.
 
 ##### Progressbar:
 
@@ -117,6 +118,14 @@ Fired after the upload instance has been created.
 
 - transfer - (*object*) file upload instance
 
+##### onStart
+
+Fired after transfer is started.
+
+##### Arguments:
+
+- transfer - (*object*) file upload instance
+
 ##### onLoad
 
 Fired before the file is uploaded.
@@ -142,7 +151,7 @@ Fired while the file is uploaded.
 
 ##### onAbort
 
-Fired when the transfer is aborted (it has not started).
+Fired when the transfer is aborted before the file is uploaded.
 
 ##### Arguments:
 
@@ -306,6 +315,7 @@ Options, Events. see [uploadManager#upload](#uploadManager:upload) for implement
 - completed - (*boolean*) true if the file has been succesfully uploaded
 - filesize - (*int*) the uploaded file size in byte.
 - state - (*int*) state of the transfer of this instance. value are: 0 (not started), 1 (loading), 2 (aborted), 3 (cancelled), 4 (completed)
+- progressbar - (*object*) progressbar. the progressbar is created only after the file is loaded.
 
 Example
 -------
