@@ -39,7 +39,7 @@ provides: [ProgressBar]
 			
 			if(typeof options.gradient == 'boolean') options.gradient = [options.color, options.fillColor];
 			
-			options.gradient = options.gradient ? this.getBackground(options.gradient) : options.color;
+			options.gradient = options.gradient ? this.getBackground(options.gradient) : options.fillColor;
 					
 			var container = document.id(this.options.container),
 				width = this.width = options.width || container.getStyle('width').toInt() || 1,
